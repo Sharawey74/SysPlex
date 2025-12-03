@@ -1,21 +1,34 @@
 ﻿{
-    "fans":  {
-                 "status":  "unavailable"
-             },
+    "fans":  [
+                 {
+                     "status":  "OK",
+                     "name":  "CPU Fan",
+                     "location":  "Processor cooling",
+                     "rpm":  "unavailable"
+                 },
+                 {
+                     "status":  "OK",
+                     "name":  "GPU Fan",
+                     "location":  "Graphics cooling",
+                     "rpm":  "unavailable"
+                 }
+             ],
+    "detection_method":  "Inferred (Gaming/High-Performance Laptop)",
     "cpu":  {
                 "vendor":  "Intel",
                 "model":  "Intel(R) Core(TM) i7-14700HX",
                 "load_15":  0,
                 "load_1":  0,
                 "load_5":  0,
-                "usage_percent":  7.2,
+                "usage_percent":  4.3,
                 "logical_processors":  28
             },
+    "fan_count":  2,
     "disk":  [
                  {
                      "filesystem":  "NTFS",
                      "total_gb":  476.11,
-                     "used_gb":  299.67,
+                     "used_gb":  299.69,
                      "device":  "C:",
                      "used_percent":  62.9
                  }
@@ -37,37 +50,38 @@
                                        "speed_mhz":  4800
                                    }
                                ],
-                   "available_mb":  14087,
+                   "available_mb":  14093,
                    "total_mb":  24284,
-                   "free_mb":  14087,
-                   "used_mb":  10197
+                   "free_mb":  14093,
+                   "used_mb":  10191
                },
-    "timestamp":  "2025-12-03T16:48:52Z",
+    "timestamp":  "2025-12-03T17:36:37Z",
     "system":  {
                    "kernel":  "10.0.26200",
                    "hostname":  "DESKTOP-5G0BPG5",
-                   "uptime_seconds":  75117,
+                   "uptime_seconds":  77984,
                    "model":  "83JE",
                    "manufacturer":  "LENOVO",
                    "os":  "Microsoft Windows 11 Pro"
                },
-    "smart":  {
-                  "status":  "restricted"
-              },
+    "status":  "available",
     "network":  [
                     {
                         "rx_bytes":  563142,
-                        "tx_bytes":  42154635,
+                        "tx_bytes":  42214356,
                         "iface":  "vEthernet (WSL (Hyper-V firewall))"
                     },
                     {
-                        "rx_bytes":  215870515,
-                        "tx_bytes":  98273314,
+                        "rx_bytes":  230928255,
+                        "tx_bytes":  126236118,
                         "iface":  "Wi-Fi"
                     }
                 ],
+    "smart":  {
+                  "status":  "restricted - requires administrator privileges"
+              },
     "temperature":  {
-                        "cpu_celsius":  27.9,
+                        "cpu_celsius":  0,
                         "gpu_celsius":  38,
                         "gpu_vendor":  "NVIDIA"
                     }

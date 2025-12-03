@@ -1,0 +1,31 @@
+# System Monitor - Git Ignore
+
+# Data files (generated at runtime)
+data/logs/*.log
+data/metrics/*.json
+!data/logs/.gitkeep
+!data/metrics/.gitkeep
+
+# Temporary files
+*.tmp
+*.temp
+~*
+
+# OS specific
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Optional: Uncomment if you want users to download libraries themselves
+# libs/*.dll
+
+# Keep README files
+!libs/README.md
+!docs/README.md
