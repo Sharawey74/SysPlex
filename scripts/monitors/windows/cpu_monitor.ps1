@@ -5,9 +5,14 @@ $ErrorActionPreference = "Stop"
 
 function Get-CpuMetrics {
     try {
-        # Get CPU usage percentage
-        $cpuCounter = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop
-        $cpuUsage = [math]::Round($cpuCounter.CounterSamples[0].CookedValue, 1)
+        # Get CPU usage percentage with averaging over 5 samples
+        $cpuSamples = @()
+        for ($i = 0; $i -lt 5; $i++) {
+            $cpuCounter = Get-Counter '\Processor(_Total)\% Processor Time' -ErrorAction Stop
+            $cpuSamples += $cpuCounter.CounterSamples[0].CookedValue
+            if ($i -lt 4) { Start-Sleep -Milliseconds 200 }
+        }
+        $cpuUsage = [math]::Round(($cpuSamples | Measure-Object -Average).Average, 1)
         
         # Get processor info for load calculation
         $processors = Get-CimInstance Win32_Processor -ErrorAction Stop

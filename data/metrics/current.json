@@ -1,55 +1,56 @@
 ﻿{
-  "timestamp": "2025-12-03T11:56:28Z",
-  "system": {
-    "os": "Kali GNU/Linux Rolling",
-    "hostname": "mistera",
-    "uptime_seconds": 3715,
-    "kernel": "6.16.8+kali-amd64"
-  },
-  "cpu": {
-    "usage_percent": 2.26,
-    "load_1": 0.15,
-    "load_5": 0.16,
-    "load_15": 0.10
-  },
-  "memory": {
-    "total_mb": 3883,
-    "used_mb": 1121,
-    "free_mb": 1953,
-    "available_mb": 2761
-  },
-  "disk": [
-    {
-      "device": "/",
-      "filesystem": "/dev/sda1",
-      "total_gb": 37.02,
-      "used_gb": 19.73,
-      "used_percent": 53.3
-    }
-  ],
-  "network": [
-    {
-      "iface": "lo",
-      "rx_bytes": 480,
-      "tx_bytes": 480
-    },
-    {
-      "iface": "eth0",
-      "rx_bytes": 78836987,
-      "tx_bytes": 691398
-    }
-  ],
-  "temperature": {
-    "status": "unavailable"
-  },
-  "fan": {
-    "status": "unavailable"
-  },
-  "smart": [
-    {
-      "device": "/dev/sda",
-      "health": "UNKNOWN",
-      "power_on_hours": 0
-    }
-  ]
+    "fans":  {
+                 "status":  "unavailable"
+             },
+    "cpu":  {
+                "logical_processors":  28,
+                "load_1":  0,
+                "load_15":  0,
+                "load_5":  0,
+                "usage_percent":  5.3
+            },
+    "disk":  [
+                 {
+                     "filesystem":  "NTFS",
+                     "total_gb":  476.11,
+                     "used_gb":  299.59,
+                     "device":  "C:",
+                     "used_percent":  62.9
+                 }
+             ],
+    "memory":  {
+                   "available_mb":  14546,
+                   "total_mb":  24284,
+                   "free_mb":  14546,
+                   "used_mb":  9738
+               },
+    "timestamp":  "2025-12-03T15:17:30Z",
+    "system":  {
+                   "kernel":  "10.0.26200",
+                   "hostname":  "DESKTOP-5G0BPG5",
+                   "uptime_seconds":  69637,
+                   "model":  "83JE",
+                   "manufacturer":  "LENOVO",
+                   "os":  "Microsoft Windows 11 Pro"
+               },
+    "smart":  {
+                  "status":  "restricted"
+              },
+    "network":  [
+                    {
+                        "rx_bytes":  563142,
+                        "tx_bytes":  42043128,
+                        "iface":  "vEthernet (WSL (Hyper-V firewall))"
+                    },
+                    {
+                        "rx_bytes":  184640422,
+                        "tx_bytes":  29135822,
+                        "iface":  "Wi-Fi"
+                    }
+                ],
+    "temperature":  {
+                        "cpu_celsius":  27.9,
+                        "gpu_celsius":  36,
+                        "gpu_vendor":  "NVIDIA"
+                    }
 }

@@ -5,6 +5,18 @@ $ErrorActionPreference = "Stop"
 
 function Get-SmartMetrics {
     try {
+        # Check if running as administrator
+        $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+        
+        if (-not $isAdmin) {
+            $result = @{
+                smart = @{
+                    status = "restricted - requires administrator privileges"
+                }
+            }
+            return $result | ConvertTo-Json -Compress
+        }
+        
         # Try to get disk health from WMI
         $disks = Get-CimInstance -Namespace "root/wmi" -ClassName MSStorageDriver_FailurePredictStatus -ErrorAction SilentlyContinue
         
