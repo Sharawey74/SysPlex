@@ -1,0 +1,338 @@
+"""
+Stage 3 Dashboard Verification Script
+
+Verifies all success criteria for Stage 3 Terminal Dashboard implementation.
+"""
+
+import sys
+import json
+import subprocess
+from pathlib import Path
+from typing import List, Tuple
+
+
+class Colors:
+    """Terminal colors for output."""
+    GREEN = '\033[92m'
+    RED = '\033[91m'
+    YELLOW = '\033[93m'
+    BLUE = '\033[94m'
+    END = '\033[0m'
+
+
+def check(condition: bool, message: str) -> bool:
+    """Print check result."""
+    if condition:
+        print(f"  {Colors.GREEN}✓{Colors.END} {message}")
+    else:
+        print(f"  {Colors.RED}✗{Colors.END} {message}")
+    return condition
+
+
+def section(title: str):
+    """Print section header."""
+    print(f"\n{Colors.BLUE}{'='*60}{Colors.END}")
+    print(f"{Colors.BLUE}{title}{Colors.END}")
+    print(f"{Colors.BLUE}{'='*60}{Colors.END}")
+
+
+def verify_directory_structure() -> List[bool]:
+    """Verify Stage 3 directory structure."""
+    section("1. Directory Structure")
+    
+    project_root = Path(__file__).parent
+    results = []
+    
+    # Required directories
+    directories = [
+        "core",
+        "display",
+        "tests/python",
+        "data/alerts"
+    ]
+    
+    for dir_path in directories:
+        full_path = project_root / dir_path
+        results.append(check(
+            full_path.exists() and full_path.is_dir(),
+            f"Directory exists: {dir_path}"
+        ))
+    
+    return results
+
+
+def verify_files() -> List[bool]:
+    """Verify all required files exist."""
+    section("2. Required Files")
+    
+    project_root = Path(__file__).parent
+    results = []
+    
+    # Required files
+    files = [
+        "core/__init__.py",
+        "core/metrics_collector.py",
+        "core/alert_manager.py",
+        "display/__init__.py",
+        "display/tui_dashboard.py",
+        "dashboard_tui.py",
+        "requirements.txt",
+        "data/alerts/alerts.json",
+        "tests/python/__init__.py",
+        "tests/python/test_metrics_collector.py",
+        "tests/python/test_alert_manager.py",
+        "tests/python/test_tui_dashboard.py"
+    ]
+    
+    for file_path in files:
+        full_path = project_root / file_path
+        results.append(check(
+            full_path.exists() and full_path.is_file(),
+            f"File exists: {file_path}"
+        ))
+    
+    return results
+
+
+def verify_python_dependencies() -> List[bool]:
+    """Verify Python dependencies are installed."""
+    section("3. Python Dependencies")
+    
+    results = []
+    dependencies = ['rich', 'psutil', 'pytest']
+    
+    for dep in dependencies:
+        try:
+            __import__(dep)
+            results.append(check(True, f"Package installed: {dep}"))
+        except ImportError:
+            results.append(check(False, f"Package installed: {dep}"))
+    
+    return results
+
+
+def verify_imports() -> List[bool]:
+    """Verify Python modules can be imported."""
+    section("4. Module Imports")
+    
+    results = []
+    
+    # Add project root to path
+    project_root = Path(__file__).parent
+    sys.path.insert(0, str(project_root))
+    
+    modules = [
+        ('core.metrics_collector', 'load_current_metrics'),
+        ('core.alert_manager', 'load_alerts'),
+        ('display.tui_dashboard', 'SystemDashboard')
+    ]
+    
+    for module_name, attr in modules:
+        try:
+            module = __import__(module_name, fromlist=[attr])
+            getattr(module, attr)
+            results.append(check(True, f"Import successful: {module_name}.{attr}"))
+        except Exception as e:
+            results.append(check(False, f"Import failed: {module_name}.{attr} ({e})"))
+    
+    return results
+
+
+def verify_json_structure() -> List[bool]:
+    """Verify JSON files have correct structure."""
+    section("5. JSON Structure")
+    
+    project_root = Path(__file__).parent
+    results = []
+    
+    # Check alerts.json
+    alerts_file = project_root / "data/alerts/alerts.json"
+    try:
+        with open(alerts_file, 'r') as f:
+            data = json.load(f)
+        
+        has_timestamp = 'timestamp' in data
+        has_alerts = 'alerts' in data and isinstance(data['alerts'], list)
+        
+        results.append(check(has_timestamp, "alerts.json has 'timestamp' field"))
+        results.append(check(has_alerts, "alerts.json has 'alerts' array"))
+        
+    except Exception as e:
+        results.append(check(False, f"alerts.json is valid JSON ({e})"))
+    
+    # Check current.json if exists
+    metrics_file = project_root / "data/metrics/current.json"
+    if metrics_file.exists():
+        try:
+            with open(metrics_file, 'r') as f:
+                data = json.load(f)
+            results.append(check(True, "current.json is valid JSON"))
+        except Exception as e:
+            results.append(check(False, f"current.json is valid JSON ({e})"))
+    else:
+        print(f"  {Colors.YELLOW}⚠{Colors.END} current.json not found (will be generated by monitoring scripts)")
+    
+    return results
+
+
+def verify_code_quality() -> List[bool]:
+    """Verify code has proper docstrings and type hints."""
+    section("6. Code Quality")
+    
+    project_root = Path(__file__).parent
+    results = []
+    
+    # Check for docstrings
+    files_to_check = [
+        "core/metrics_collector.py",
+        "core/alert_manager.py",
+        "display/tui_dashboard.py"
+    ]
+    
+    for file_path in files_to_check:
+        full_path = project_root / file_path
+        try:
+            content = full_path.read_text()
+            has_module_doc = '"""' in content[:500]  # Docstring in first 500 chars
+            has_type_hints = '-> ' in content or ': ' in content  # Basic check
+            
+            results.append(check(has_module_doc, f"{file_path} has module docstring"))
+            results.append(check(has_type_hints, f"{file_path} uses type hints"))
+        except Exception as e:
+            results.append(check(False, f"Could not check {file_path} ({e})"))
+    
+    return results
+
+
+def verify_tests() -> List[bool]:
+    """Verify unit tests exist and can be discovered."""
+    section("7. Unit Tests")
+    
+    project_root = Path(__file__).parent
+    results = []
+    
+    # Count test functions
+    test_files = [
+        "tests/python/test_metrics_collector.py",
+        "tests/python/test_alert_manager.py",
+        "tests/python/test_tui_dashboard.py"
+    ]
+    
+    total_tests = 0
+    for file_path in test_files:
+        full_path = project_root / file_path
+        try:
+            content = full_path.read_text()
+            test_count = content.count('def test_')
+            total_tests += test_count
+            results.append(check(
+                test_count > 0,
+                f"{file_path}: {test_count} test functions"
+            ))
+        except Exception as e:
+            results.append(check(False, f"Could not read {file_path} ({e})"))
+    
+    results.append(check(total_tests >= 30, f"Total tests: {total_tests} (minimum 30)"))
+    
+    return results
+
+
+def run_unit_tests() -> Tuple[bool, str]:
+    """Run pytest tests."""
+    section("8. Running Unit Tests")
+    
+    project_root = Path(__file__).parent
+    
+    try:
+        result = subprocess.run(
+            ['pytest', 'tests/python/', '-v', '--tb=short'],
+            cwd=project_root,
+            capture_output=True,
+            text=True,
+            timeout=60
+        )
+        
+        passed = result.returncode == 0
+        output = result.stdout + result.stderr
+        
+        if passed:
+            print(f"  {Colors.GREEN}✓{Colors.END} All tests passed")
+        else:
+            print(f"  {Colors.RED}✗{Colors.END} Some tests failed")
+            print("\nTest output:")
+            print(output[-1000:])  # Last 1000 chars
+        
+        return passed, output
+        
+    except FileNotFoundError:
+        print(f"  {Colors.YELLOW}⚠{Colors.END} pytest not installed - skipping test execution")
+        return None, "pytest not found"
+    except subprocess.TimeoutExpired:
+        print(f"  {Colors.RED}✗{Colors.END} Tests timed out")
+        return False, "timeout"
+
+
+def print_summary(all_results: List[bool]):
+    """Print verification summary."""
+    section("Summary")
+    
+    total = len(all_results)
+    passed = sum(all_results)
+    failed = total - passed
+    percentage = (passed / total * 100) if total > 0 else 0
+    
+    print(f"\nTotal Checks: {total}")
+    print(f"{Colors.GREEN}Passed: {passed}{Colors.END}")
+    print(f"{Colors.RED}Failed: {failed}{Colors.END}")
+    print(f"Success Rate: {percentage:.1f}%")
+    
+    if percentage == 100:
+        print(f"\n{Colors.GREEN}{'='*60}{Colors.END}")
+        print(f"{Colors.GREEN}🎉 Stage 3 Implementation Complete!{Colors.END}")
+        print(f"{Colors.GREEN}{'='*60}{Colors.END}")
+        print("\nNext steps:")
+        print("  1. Install dependencies: pip install -r requirements.txt")
+        print("  2. Start monitoring: .\\scripts\\main_monitor.ps1")
+        print("  3. Run dashboard: python dashboard_tui.py")
+    elif percentage >= 80:
+        print(f"\n{Colors.YELLOW}{'='*60}{Colors.END}")
+        print(f"{Colors.YELLOW}⚠ Stage 3 Mostly Complete{Colors.END}")
+        print(f"{Colors.YELLOW}{'='*60}{Colors.END}")
+        print("\nAddress remaining issues before deployment.")
+    else:
+        print(f"\n{Colors.RED}{'='*60}{Colors.END}")
+        print(f"{Colors.RED}❌ Stage 3 Incomplete{Colors.END}")
+        print(f"{Colors.RED}{'='*60}{Colors.END}")
+        print("\nCritical issues need to be resolved.")
+
+
+def main():
+    """Run all verification checks."""
+    print(f"\n{Colors.BLUE}Stage 3 Terminal Dashboard - Verification{Colors.END}")
+    print(f"{Colors.BLUE}System Monitor Project{Colors.END}")
+    
+    all_results = []
+    
+    # Run all checks
+    all_results.extend(verify_directory_structure())
+    all_results.extend(verify_files())
+    all_results.extend(verify_python_dependencies())
+    all_results.extend(verify_imports())
+    all_results.extend(verify_json_structure())
+    all_results.extend(verify_code_quality())
+    all_results.extend(verify_tests())
+    
+    # Run unit tests if pytest available
+    test_result, _ = run_unit_tests()
+    if test_result is not None:
+        all_results.append(test_result)
+    
+    # Print summary
+    print_summary(all_results)
+    
+    # Exit code
+    sys.exit(0 if all(all_results) else 1)
+
+
+if __name__ == "__main__":
+    main()

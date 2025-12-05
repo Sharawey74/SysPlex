@@ -1,42 +1,81 @@
 # Quick Start Guide
 
-## Windows
+## 🚀 Universal Launcher (Recommended)
 
-### Run Monitoring
+### Run Monitoring + Dashboard (All Platforms)
+```bash
+python universal.py --dashboard
+```
+
+### Run Monitoring Only
+```bash
+python universal.py
+```
+
+### Continuous Monitoring (Watch Mode)
+```bash
+python universal.py --watch --interval 30
+```
+
+### View Live Dashboard
+```bash
+python dashboard_tui.py
+```
+
+## 📊 Stage 3: Terminal Dashboard
+
+The dashboard provides real-time visualization of:
+- **CPU**: Usage, load average, cores, model
+- **Memory**: Used/total, usage %, free memory
+- **Temperature**: CPU & GPU temps with vendor info
+- **Disk**: All drives with usage bars (C:, D:, E:)
+- **Network**: Total RX/TX + top 3 active interfaces
+- **Alerts**: System notifications at bottom
+
+### Install Python Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+## 🔧 Manual Platform-Specific Execution
+
+### Windows
+
+#### Run Monitoring
 ```powershell
-cd c:\Users\DELL\Desktop\wso\system-monitor-project
+cd c:\Users\DELL\Desktop\system-monitor-project
 .\scripts\main_monitor.ps1
 ```
 
-### View Results
+#### View Results
 ```powershell
 Get-Content data\metrics\current.json
 ```
 
-### Run Tests
+#### Run Tests
 ```powershell
 .\tests\windows\Run-AllTests.ps1
 ```
 
-## Unix/Linux/macOS
+### Unix/Linux/macOS
 
-### Install
+#### Install
 ```bash
 cd /path/to/system-monitor-project
 bash scripts/install.sh
 ```
 
-### Run Monitoring
+#### Run Monitoring
 ```bash
 bash scripts/main_monitor.sh
 ```
 
-### View Results
+#### View Results
 ```bash
 cat data/metrics/current.json | jq .
 ```
 
-### Run Tests
+#### Run Tests
 ```bash
 bash tests/unix/run_all_tests.sh
 ```
@@ -56,6 +95,24 @@ bash tests/unix/run_all_tests.sh
 6. **Temperature** - CPU/GPU temps (if available)
 7. **Fans** - Fan speeds (if available)
 8. **SMART** - Disk health (if available)
+
+## 🧪 Testing
+
+### Run Python Dashboard Tests
+```bash
+pytest tests/python/ -v
+```
+
+### Run All Tests
+```bash
+python tests/python/run_tests.py
+```
+
+### Test Coverage
+- 75 Python unit tests (74 passed, 1 skipped)
+- test_metrics_collector.py: 20 tests
+- test_alert_manager.py: 22 tests  
+- test_tui_dashboard.py: 33 tests
 
 ## Status Fields
 
