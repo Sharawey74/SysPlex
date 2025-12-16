@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Main Monitor - Orchestrator for Unix systems
+# Docker-compatible: Uses HOST_PROC, HOST_SYS, HOST_DEV if available
 
 set -euo pipefail
 
@@ -10,6 +11,11 @@ MONITORS_DIR="${SCRIPT_DIR}/monitors/unix"
 UTILS_DIR="${SCRIPT_DIR}/utils"
 TEMP_DIR="${PROJECT_ROOT}/data/metrics/temp"
 
+# Use host paths if in Docker, fallback to normal paths
+export PROC_PATH="${HOST_PROC:-/proc}"
+export SYS_PATH="${HOST_SYS:-/sys}"
+export DEV_PATH="${HOST_DEV:-/dev}"
+
 # Source logger
 source "${UTILS_DIR}/logger.sh" || true
 
@@ -18,6 +24,9 @@ mkdir -p "${TEMP_DIR}"
 
 # Log start
 "${UTILS_DIR}/logger.sh" "INFO" "Starting system monitoring collection"
+if [ "$PROC_PATH" != "/proc" ]; then
+    "${UTILS_DIR}/logger.sh" "INFO" "Docker mode: Using PROC_PATH=$PROC_PATH"
+fi
 
 # Array to store temp file paths
 declare -a temp_files=()
@@ -34,16 +43,28 @@ monitors=(
     "smart_monitor.sh"
 )
 
+# Use Docker-optimized temperature monitor if in container
+TEMP_MONITOR_SCRIPT="temperature_monitor.sh"
+if [ -f "/.dockerenv" ] && [ -f "${MONITORS_DIR}/temperature_monitor_docker.sh" ]; then
+    TEMP_MONITOR_SCRIPT="temperature_monitor_docker.sh"
+fi
+
 for monitor in "${monitors[@]}"; do
     monitor_path="${MONITORS_DIR}/${monitor}"
     monitor_name="${monitor%.sh}"
     temp_file="${TEMP_DIR}/${monitor_name}.json"
     
-    if [ -f "${monitor_path}" ]; then
+    # Use Docker version for temperature but keep standard name
+    actual_monitor_path="${monitor_path}"
+    if [ "$monitor" = "temperature_monitor.sh" ]; then
+        actual_monitor_path="${MONITORS_DIR}/${TEMP_MONITOR_SCRIPT}"
+    fi
+    
+    if [ -f "${actual_monitor_path}" ]; then
         "${UTILS_DIR}/logger.sh" "INFO" "Running ${monitor}"
         
         # Run monitor and save output
-        if bash "${monitor_path}" > "${temp_file}" 2>/dev/null; then
+        if bash "${actual_monitor_path}" > "${temp_file}" 2>/dev/null; then
             temp_files+=("${temp_file}")
             "${UTILS_DIR}/logger.sh" "INFO" "${monitor} completed successfully"
         else
@@ -53,7 +74,7 @@ for monitor in "${monitors[@]}"; do
             temp_files+=("${temp_file}")
         fi
     else
-        "${UTILS_DIR}/logger.sh" "WARN" "${monitor} not found at ${monitor_path}"
+        "${UTILS_DIR}/logger.sh" "WARN" "${monitor} not found at ${actual_monitor_path}"
     fi
 done
 
@@ -71,6 +92,9 @@ sections_added=0
     echo "{"
     echo "  \"timestamp\": \"${TIMESTAMP}\","
     echo "  \"platform\": \"unix\","
+    if [ "$PROC_PATH" != "/proc" ]; then
+        echo "  \"docker\": true,"
+    fi
     echo ""
     
     # Process each monitor
@@ -92,7 +116,7 @@ sections_added=0
                 
                 # Determine content type and format accordingly
                 case "${monitor_name}" in
-                    system_monitor|cpu_monitor|memory_monitor|temperature_monitor|fan_monitor|smart_monitor)
+                    system_monitor|cpu_monitor|memory_monitor|temperature_monitor|fan_monitor)
                         # Object types - extract inner content without leading/trailing braces
                         inner=$(echo "${content}" | sed '1s/^{//; $s/}$//')
                         
@@ -102,19 +126,19 @@ sections_added=0
                         
                         echo "  \"${key_name}\": {"
                         echo "${inner}" | sed 's/^/    /'
-                        echo -n "  }"
+                        echo "  }"
                         ;;
-                    disk_monitor|network_monitor)
+                    disk_monitor|network_monitor|smart_monitor)
                         # Array types - use content as-is
                         key_name="${monitor_name%_monitor}"
-                        echo -n "  \"${key_name}\": ${content}"
+                        echo "  \"${key_name}\": ${content}"
                         ;;
                     *)
                         # Unknown type - wrap as object
                         inner=$(echo "${content}" | sed '1s/^{//; $s/}$//')
                         echo "  \"${monitor_name}\": {"
                         echo "${inner}" | sed 's/^/    /'
-                        echo -n "  }"
+                        echo "  }"
                         ;;
                 esac
                 

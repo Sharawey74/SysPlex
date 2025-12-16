@@ -1,0 +1,26 @@
+[2025-12-11T21:40:23Z] [INFO] Starting system monitoring collection
+[2025-12-11T21:40:23Z] [WARN] system_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\system_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] cpu_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\cpu_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] memory_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\memory_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] disk_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\disk_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] network_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\network_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] temperature_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\temperature_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] fan_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\fan_monitor.ps1
+[2025-12-11T21:40:23Z] [WARN] smart_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\smart_monitor.ps1
+[2025-12-11T21:40:23Z] [INFO] Merging JSON outputs
+[2025-12-11T21:40:23Z] [INFO] Windows data written to windows_current.json
+[2025-12-11T21:40:23Z] [INFO] Latest data written to current.json
+[2025-12-11T21:40:23Z] [INFO] Monitoring collection completed
+[2025-12-11T21:55:20Z] [INFO] Starting system monitoring collection
+[2025-12-11T21:55:20Z] [WARN] system_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\system_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] cpu_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\cpu_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] memory_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\memory_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] disk_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\disk_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] network_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\network_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] temperature_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\temperature_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] fan_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\fan_monitor.ps1
+[2025-12-11T21:55:20Z] [WARN] smart_monitor.ps1 not found at C:\Users\DELL\Desktop\system-monitor-project-Batch\windows\scripts\monitors\windows\smart_monitor.ps1
+[2025-12-11T21:55:20Z] [INFO] Merging JSON outputs
+[2025-12-11T21:55:20Z] [INFO] Windows data written to windows_current.json
+[2025-12-11T21:55:20Z] [INFO] Latest data written to current.json
+[2025-12-11T21:55:20Z] [INFO] Monitoring collection completed

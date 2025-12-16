@@ -1,0 +1,121 @@
+{
+  "timestamp": "2025-12-16T18:33:40Z",
+  "platform": "windows",
+  "system": {
+    "os": "windows",
+    "hostname": "DESKTOP-T6GSL92",
+    "uptime_seconds": 118528,
+    "kernel": "10.0.26200.7462 Build 26200.7462"
+  },
+  "cpu": {
+    "usage_percent": 38.46153846153847,
+    "logical_processors": 8,
+    "load_1": 0,
+    "load_5": 0,
+    "load_15": 0,
+    "vendor": "GenuineIntel",
+    "model": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
+    "status": "ok"
+  },
+  "memory": {
+    "total_mb": 16106,
+    "used_mb": 15035,
+    "free_mb": 1071,
+    "available_mb": 1071,
+    "usage_percent": 93,
+    "status": "ok"
+  },
+  "disk": [
+    {
+      "device": "C:",
+      "filesystem": "NTFS",
+      "total_gb": 475.2829818725586,
+      "used_gb": 374.56035232543945,
+      "used_percent": 78.80786112932469
+    },
+    {
+      "device": "D:",
+      "filesystem": "NTFS",
+      "total_gb": 465.75585556030273,
+      "used_gb": 12.284622192382812,
+      "used_percent": 2.6375668809583623
+    },
+    {
+      "device": "E:",
+      "filesystem": "NTFS",
+      "total_gb": 465.75487899780273,
+      "used_gb": 4.235267639160156,
+      "used_percent": 0.9093340360220116
+    }
+  ],
+  "network": [
+    {
+      "iface": "Ethernet",
+      "rx_bytes": 0,
+      "tx_bytes": 0
+    },
+    {
+      "iface": "vEthernet (Default Switch)",
+      "rx_bytes": 0,
+      "tx_bytes": 1530760
+    },
+    {
+      "iface": "Local Area Connection* 1",
+      "rx_bytes": 0,
+      "tx_bytes": 0
+    },
+    {
+      "iface": "Local Area Connection* 10",
+      "rx_bytes": 0,
+      "tx_bytes": 0
+    },
+    {
+      "iface": "VMware Network Adapter VMnet1",
+      "rx_bytes": 28,
+      "tx_bytes": 1997
+    },
+    {
+      "iface": "VMware Network Adapter VMnet8",
+      "rx_bytes": 28,
+      "tx_bytes": 3306
+    },
+    {
+      "iface": "Wi-Fi",
+      "rx_bytes": 689943022,
+      "tx_bytes": 184481353
+    },
+    {
+      "iface": "Loopback Pseudo-Interface 1",
+      "rx_bytes": 0,
+      "tx_bytes": 0
+    },
+    {
+      "iface": "vEthernet (WSL (Hyper-V firewall))",
+      "rx_bytes": 410845,
+      "tx_bytes": 5863786
+    }
+  ],
+  "temperature": {
+    "cpu_celsius": 0,
+    "cpu_vendor": "GenuineIntel",
+    "gpu_celsius": 0,
+    "gpu_vendor": "",
+    "status": "unavailable"
+  },
+  "gpu": {
+    "status": "ok",
+    "count": 1,
+    "devices": [
+      {
+        "vendor": "NVIDIA",
+        "model": "NVIDIA GeForce MX330",
+        "utilization_percent": 0,
+        "memory_used_mb": 0,
+        "memory_total_mb": 2048,
+        "temperature_celsius": 67,
+        "status": "ok"
+      }
+    ]
+  },
+  "source": "native-go-agent"
+}

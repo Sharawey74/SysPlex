@@ -287,15 +287,27 @@ class SystemDashboard:
         Returns:
             Panel: Network metrics panel
         """
-        network = metrics.get('network', {})
+        network_data = metrics.get('network', [])
+        
+        # Handle both formats: list (from Host) and dict (from container)
+        if isinstance(network_data, list):
+            interfaces = network_data
+            # Calculate totals from interfaces
+            total_rx = sum(iface.get('rx_bytes', 0) for iface in interfaces)
+            total_tx = sum(iface.get('tx_bytes', 0) for iface in interfaces)
+        elif isinstance(network_data, dict):
+            interfaces = network_data.get('interfaces', [])
+            total_rx = network_data.get('total_rx_bytes', 0)
+            total_tx = network_data.get('total_tx_bytes', 0)
+        else:
+            interfaces = []
+            total_rx = 0
+            total_tx = 0
         
         # Summary table at top
         summary = Table(show_header=False, box=None, padding=(0, 1), show_edge=False)
         summary.add_column("Label", style="cyan", width=10)
         summary.add_column("Value")
-        
-        total_rx = network.get('total_rx_bytes', 0)
-        total_tx = network.get('total_tx_bytes', 0)
         
         # Convert to appropriate units
         rx_formatted = self._format_bytes(total_rx)
@@ -304,8 +316,7 @@ class SystemDashboard:
         summary.add_row("Total RX:", f"[green]{rx_formatted}[/green]")
         summary.add_row("Total TX:", f"[yellow]{tx_formatted}[/yellow]")
         
-        # Interfaces table
-        interfaces = network.get('interfaces', [])
+        # Interfaces table - filter active interfaces
         active_interfaces = sorted(
             [i for i in interfaces if i.get('rx_bytes', 0) > 0 or i.get('tx_bytes', 0) > 0],
             key=lambda x: x.get('rx_bytes', 0) + x.get('tx_bytes', 0),
@@ -380,51 +391,81 @@ class SystemDashboard:
         Returns:
             Panel: GPU metrics panel
         """
-        temp = metrics.get('temperature', {})
+        # Try Host format first (gpu.devices), then container format (temperature.gpus)
+        gpu_data = metrics.get('gpu', {})
+        if isinstance(gpu_data, dict) and 'devices' in gpu_data:
+            gpus = gpu_data.get('devices', [])
+        else:
+            temp = metrics.get('temperature', {})
+            gpus = temp.get('gpus', [])
         
         table = Table(show_header=False, box=None, padding=(0, 1))
         table.add_column("Label", style="cyan")
         table.add_column("Value")
         
-        # GPU Temperature
-        gpu_temp = temp.get('gpu_temp')
-        gpu_vendor = temp.get('gpu_vendor', 'N/A')
-        gpu_model = temp.get('gpu_model', 'N/A')
-        gpu_type = temp.get('gpu_type', 'N/A')
+        # Find the primary GPU (prefer NVIDIA, then first available)
+        primary_gpu = None
+        if gpus:
+            # First try to find NVIDIA GPU
+            for gpu in gpus:
+                vendor = gpu.get('vendor', '').lower()
+                if 'nvidia' in vendor:
+                    primary_gpu = gpu
+                    break
+            # If no NVIDIA GPU, use the first one
+            if not primary_gpu:
+                primary_gpu = gpus[0]
         
-        if gpu_temp is not None and gpu_temp > 0:
-            temp_color = self._get_color_for_temperature(gpu_temp)
-            table.add_row("Temp:", f"[{temp_color}]{gpu_temp:.1f}°C[/{temp_color}]")
-        else:
-            table.add_row("Temp:", f"[dim]N/A[/dim]")
-        
-        # GPU Vendor
-        table.add_row("Vendor:", f"[white]{gpu_vendor}[/white]")
-        
-        # GPU Model
-        if gpu_model != 'N/A' and gpu_model != 'Unknown':
-            # Truncate long model names
-            model_display = gpu_model if len(gpu_model) <= 30 else gpu_model[:27] + "..."
-            table.add_row("Model:", f"[white]{model_display}[/white]")
-        
-        # GPU Type
-        if gpu_type != 'N/A' and gpu_type != 'Unknown':
-            table.add_row("Type:", f"[white]{gpu_type}[/white]")
-        
-        # VRAM Information
-        vram_total = temp.get('vram_total_mb', 0)
-        vram_used = temp.get('vram_used_mb', 0)
-        vram_usage_pct = temp.get('vram_usage_percent', 0)
-        
-        if vram_total > 0:
-            vram_gb_total = vram_total / 1024
-            vram_gb_used = vram_used / 1024
-            vram_color = self._get_color_for_percentage(vram_usage_pct)
-            vram_bar = self._create_mini_progress_bar(vram_usage_pct, vram_color)
+        if primary_gpu:
+            # Handle different field names (Host vs container)
+            gpu_temp = primary_gpu.get('temperature_celsius', 0)
+            gpu_vendor = primary_gpu.get('vendor', 'N/A')
+            gpu_model = primary_gpu.get('model', 'N/A')
+            gpu_type = primary_gpu.get('type', 'N/A')
+            vram_total = primary_gpu.get('vram_total_mb') or primary_gpu.get('memory_total_mb', 0)
+            vram_used = primary_gpu.get('vram_used_mb') or primary_gpu.get('memory_used_mb', 0)
+            vram_free = primary_gpu.get('vram_free_mb', 0)
             
-            table.add_row("", "")  # Empty row for spacing
-            table.add_row("VRAM:", f"{vram_gb_used:.1f} / {vram_gb_total:.1f} GB")
-            table.add_row("Usage:", f"[{vram_color}]{vram_usage_pct:.1f}%[/{vram_color}] {vram_bar}")
+            # GPU Temperature
+            if gpu_temp is not None and gpu_temp > 0:
+                temp_color = self._get_color_for_temperature(gpu_temp)
+                table.add_row("Temp:", f"[{temp_color}]{gpu_temp:.1f}°C[/{temp_color}]")
+            else:
+                table.add_row("Temp:", f"[dim]N/A[/dim]")
+            
+            # GPU Vendor
+            table.add_row("Vendor:", f"[white]{gpu_vendor}[/white]")
+            
+            # GPU Model
+            if gpu_model != 'N/A' and gpu_model != 'Unknown':
+                # Truncate long model names
+                model_display = gpu_model if len(gpu_model) <= 30 else gpu_model[:27] + "..."
+                table.add_row("Model:", f"[white]{model_display}[/white]")
+            
+            # GPU Type
+            if gpu_type != 'N/A' and gpu_type != 'Unknown':
+                table.add_row("Type:", f"[white]{gpu_type}[/white]")
+            
+            # VRAM Information
+            if vram_total > 0:
+                vram_gb_total = vram_total / 1024
+                vram_gb_used = vram_used / 1024
+                vram_usage_pct = (vram_used / vram_total * 100) if vram_total > 0 else 0
+                vram_color = self._get_color_for_percentage(vram_usage_pct)
+                vram_bar = self._create_mini_progress_bar(vram_usage_pct, vram_color)
+                
+                table.add_row("", "")  # Empty row for spacing
+                table.add_row("VRAM:", f"{vram_gb_used:.1f} / {vram_gb_total:.1f} GB")
+                table.add_row("Usage:", f"[{vram_color}]{vram_usage_pct:.1f}%[/{vram_color}] {vram_bar}")
+            
+            # Show GPU count if multiple
+            if len(gpus) > 1:
+                table.add_row("", "")
+                table.add_row("GPUs:", f"[dim]{len(gpus)} detected[/dim]")
+        else:
+            # No GPU data available
+            table.add_row("Temp:", f"[dim]N/A[/dim]")
+            table.add_row("Vendor:", f"[dim]N/A[/dim]")
         
         return Panel(
             table,

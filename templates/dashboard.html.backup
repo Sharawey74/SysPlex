@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor - Web Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1>
+                    <span class="icon">📊</span>
+                    System Monitor Dashboard
+                </h1>
+                <div class="header-actions">
+                    <button id="generateReportBtn" class="btn btn-primary">
+                        📄 Generate Report
+                    </button>
+                    <button id="refreshBtn" class="btn btn-secondary">
+                        🔄 Refresh
+                    </button>
+                    <div class="status-indicator">
+                        <span class="status-dot" id="statusDot"></span>
+                        <span id="lastUpdate">Connecting...</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- System Info Bar -->
+        <div class="info-bar" id="systemInfo">
+            <div class="info-item">
+                <span class="info-label">Hostname:</span>
+                <span class="info-value" id="hostname">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">OS:</span>
+                <span class="info-value" id="os">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Uptime:</span>
+                <span class="info-value" id="uptime">-</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Platform:</span>
+                <span class="info-value" id="platform">-</span>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Grid -->
+        <div class="dashboard-grid">
+            <!-- CPU Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>🖥️ CPU</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="metric-main">
+                        <div class="metric-value" id="cpuUsage">0%</div>
+                        <div class="metric-label">Usage</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="cpuProgress" style="width: 0%"></div>
+                    </div>
+                    <div class="metric-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Model:</span>
+                            <span class="detail-value" id="cpuModel">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Vendor:</span>
+                            <span class="detail-value" id="cpuVendor">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Cores:</span>
+                            <span class="detail-value" id="cpuCores">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Temperature:</span>
+                            <span class="detail-value" id="cpuTemp">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Memory Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>🧠 Memory</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="metric-main">
+                        <div class="metric-value" id="memoryUsage">0%</div>
+                        <div class="metric-label">Usage</div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="memoryProgress" style="width: 0%"></div>
+                    </div>
+                    <div class="metric-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Used:</span>
+                            <span class="detail-value" id="memoryUsed">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Total:</span>
+                            <span class="detail-value" id="memoryTotal">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Free:</span>
+                            <span class="detail-value" id="memoryFree">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Available:</span>
+                            <span class="detail-value" id="memoryAvailable">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disk Panel -->
+            <div class="panel panel-wide">
+                <div class="panel-header">
+                    <h2>💾 Disk Usage</h2>
+                </div>
+                <div class="panel-body">
+                    <div id="diskList" class="disk-list">
+                        <div class="no-data">Loading disk information...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Panel -->
+            <div class="panel panel-wide">
+                <div class="panel-header">
+                    <h2>🌐 Network</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="network-summary">
+                        <div class="network-stat">
+                            <span class="network-label">Total RX:</span>
+                            <span class="network-value" id="networkRx">0 B</span>
+                        </div>
+                        <div class="network-stat">
+                            <span class="network-label">Total TX:</span>
+                            <span class="network-value" id="networkTx">0 B</span>
+                        </div>
+                    </div>
+                    <div id="networkInterfaces" class="interface-list">
+                        <div class="no-data">Loading network information...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Temperature Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>🌡️ Temperature</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="temp-section">
+                        <div class="temp-item">
+                            <span class="temp-label">CPU:</span>
+                            <span class="temp-value" id="tempCpu">-</span>
+                        </div>
+                    </div>
+                    <div id="gpuTemps" class="temp-section">
+                        <!-- GPU temperatures populated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- GPU Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>🎮 GPU</h2>
+                </div>
+                <div class="panel-body">
+                    <div id="gpuList" class="gpu-list">
+                        <div class="no-data">Loading GPU information...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RAM Modules Panel -->
+            <div class="panel panel-wide">
+                <div class="panel-header">
+                    <h2>🎯 RAM Modules</h2>
+                </div>
+                <div class="panel-body">
+                    <div id="ramModules" class="ram-modules-list">
+                        <div class="no-data">Loading RAM information...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fans Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>💨 Cooling Fans</h2>
+                </div>
+                <div class="panel-body">
+                    <div id="fansList" class="fans-list">
+                        <div class="no-data">Loading fan information...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SMART Status Panel -->
+            <div class="panel">
+                <div class="panel-header">
+                    <h2>🔍 S.M.A.R.T Status</h2>
+                </div>
+                <div class="panel-body">
+                    <div id="smartStatus" class="smart-status">
+                        <div class="no-data">Loading S.M.A.R.T information...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alerts-section">
+            <div class="alerts-header">
+                <h2>🚨 Recent Alerts</h2>
+                <div class="alert-counts">
+                    <span class="alert-count critical" id="criticalCount">0</span>
+                    <span class="alert-count warning" id="warningCount">0</span>
+                    <span class="alert-count info" id="infoCount">0</span>
+                </div>
+            </div>
+            <div id="alertsList" class="alerts-list">
+                <div class="no-data">No alerts</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>System Monitor Dashboard v4.0 | Stage 4: Web Dashboard + Reports</p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

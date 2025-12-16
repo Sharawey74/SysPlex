@@ -1,13 +1,25 @@
-# System Monitor Terminal Dashboard - Python Dependencies
+# System Monitor - Python Dependencies
+# Stage 3: Terminal Dashboard
+# Stage 4: Web Dashboard + Reports
 
-# Core dependencies
+# Core dependencies (Stage 3)
 rich>=13.0.0
 psutil>=5.9.0
+
+# Web dependencies (Stage 4)
+Flask>=3.0.0
+Jinja2>=3.1.0
+Werkzeug>=3.0.0
+MarkupSafe>=2.1.0
 
 # Testing dependencies
 pytest>=7.0.0
 pytest-cov>=4.0.0
 pytest-mock>=3.10.0
+pytest-timeout>=2.1.0
+
+# Docker testing
+docker>=6.0.0
 
 # Code quality (optional)
 black>=23.0.0

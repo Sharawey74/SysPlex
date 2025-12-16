@@ -1,0 +1,126 @@
+# System Monitor - Two-Tier Architecture
+# Run with: docker-compose up --build -d
+# Prerequisites: Host API must be running natively (bash start-host-api.sh)
+
+version: '3.8'
+
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: system-monitor:latest
+    container_name: system-monitor-dashboard
+
+    # Method 1: Privileged mode for maximum hardware visibility
+    # Note: Dashboard still can't access real GPU/sensors
+    # This mode is for compatibility and seeing host processes
+    pid: host
+    privileged: true
+
+    # Mount host paths (optional for container-based metrics)
+    volumes:
+      # Application data
+      - ./data:/app/data
+      - ./reports:/app/reports
+      - ./json:/app/json
+      - ./Host/output:/app/Host/output:ro
+      - ./Host2:/app/Host2:ro
+
+      # Optional: Host system paths (for container metrics only)
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /dev:/host/dev:ro
+
+    # Network configuration
+    ports:
+      - "5000:5000" # Web dashboard
+
+    # Enable connection to Host API running on native OS
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # Environment variables
+    environment:
+      - PYTHONUNBUFFERED=1
+      - FLASK_ENV=production
+      - HOST_API_URL=http://host.docker.internal:8888
+      - NATIVE_AGENT_URL=http://host.docker.internal:8889
+      - USE_NATIVE_AGENT=false
+      - HOST_MONITORING=true
+      - JSON_LOGGING_ENABLED=true
+      - JSON_LOG_INTERVAL=60
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+        reservations:
+          cpus: '0.5'
+          memory: 256M
+
+    # Post-startup messages
+    labels:
+      - "com.system-monitor.description=Two-Tier Architecture Dashboard"
+
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/api/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # JSON Logger Service - Background metrics logging
+  json-logger:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: system-monitor:latest
+    container_name: system-monitor-json-logger
+    command: python3 web/json_logger.py
+
+    # Mount json directory for logging
+    volumes:
+      - ./json:/app/json
+      - ./data:/app/data
+
+    # Enable connection to Host API
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    # Environment variables
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST_API_URL=http://host.docker.internal:8888
+      - JSON_LOGGING_ENABLED=true
+      - JSON_LOG_INTERVAL=60
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Depends on dashboard
+    depends_on:
+      - dashboard
+
+networks:
+  default:
+    name: system-monitor-network

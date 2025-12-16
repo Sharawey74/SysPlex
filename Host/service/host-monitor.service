@@ -1,0 +1,31 @@
+[Unit]
+Description=Host System Monitor - Continuous Metrics Collection
+Documentation=https://github.com/Sharawey74/system-monitor-project
+After=network.target
+
+[Service]
+Type=simple
+User=%i
+Group=%i
+WorkingDirectory=/path/to/system-monitor-project-Batch/Host
+ExecStart=/bin/bash /path/to/system-monitor-project-Batch/Host/loop/host_monitor_loop.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=host-monitor
+
+# Environment variables (optional)
+Environment="PROC_PATH=/proc"
+Environment="SYS_PATH=/sys"
+Environment="DEV_PATH=/dev"
+
+# Security hardening (optional)
+# PrivateTmp=yes
+# NoNewPrivileges=true
+# ProtectSystem=strict
+# ProtectHome=read-only
+# ReadWritePaths=/path/to/system-monitor-project-Batch/Host/output
+
+[Install]
+WantedBy=multi-user.target

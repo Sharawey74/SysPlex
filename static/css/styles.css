@@ -1,0 +1,450 @@
+/* System Monitor v7.2 - Manual Refresh Styles */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap');
+
+:root {
+    /* Base Colors */
+    --bg-body: #0f172a;
+    /* Deep Slate */
+    --bg-card: rgba(30, 41, 59, 0.7);
+
+    /* Text */
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+
+    /* Accents (Gradients) */
+    --grad-1: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+    /* Indigo -> Purple (CPU) */
+    --grad-2: linear-gradient(135deg, #ec4899 0%, #f43f5e 100%);
+    /* Pink -> Rose (Mem) */
+    --grad-3: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    /* Blue -> Cyan (Disk) */
+    --grad-4: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    /* Amber -> Orange (Net) */
+    --bg-native: linear-gradient(145deg, rgba(20, 30, 48, 0.9) 0%, rgba(10, 20, 30, 0.95) 100%);
+    --text-native: #2ecc71;
+
+    --grad-3: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+    /* Blue -> Cyan */
+    --grad-4: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+    /* Amber -> Orange */
+
+    /* UI Elements */
+    --border-color: rgba(255, 255, 255, 0.05);
+    --card-radius: 20px;
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-main);
+    overflow-x: hidden;
+}
+
+/* --- Layout Grid (Sidebar Removed) --- */
+.app-container {
+    display: block;
+    width: 100%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 30px;
+}
+
+.sidebar {
+    display: none;
+}
+
+/* --- Header --- */
+.top-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.page-title {
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.brand-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--grad-1);
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.action-area {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+/* Primary Button (Gradient) */
+.btn-primary {
+    background: var(--grad-1);
+    border: none;
+    padding: 12px 25px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(99, 102, 241, 0.4);
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-primary:active {
+    transform: scale(0.95);
+}
+
+/* Secondary Button (Outline/Glass) */
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 12px 25px;
+    border-radius: 12px;
+    color: var(--text-main);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.btn-secondary:active {
+    transform: scale(0.95);
+}
+
+
+/* --- Stats Grid --- */
+.stats-grid,
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    padding: 25px;
+    border-radius: var(--card-radius);
+    color: white;
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 150px;
+}
+
+.bg-grad-1 {
+    background: var(--grad-1);
+}
+
+.bg-grad-2 {
+    background: var(--grad-2);
+}
+
+.bg-grad-3 {
+    background: var(--grad-3);
+}
+
+.bg-grad-4 {
+    background: var(--grad-4);
+}
+
+/* Split View Grid Adjustment */
+.metrics-grid.split-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    /* Strict 2 columns */
+    gap: 1.5rem;
+    width: 100%;
+}
+
+/* Ensure mobile stacking */
+@media (max-width: 900px) {
+    .metrics-grid.split-view {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Force cards to fill height so they align */
+.metrics-grid.split-view .card {
+    height: 100%;
+    min-height: 160px;
+}
+
+.dual-header-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0;
+    width: 100%;
+}
+
+.dual-header-col {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    border-radius: 8px;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+.stat-icon-bg {
+    position: absolute;
+    right: -20px;
+    top: -20px;
+    font-size: 8rem;
+    opacity: 0.1;
+    transform: rotate(15deg);
+}
+
+.stat-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+/* --- Metric Card Styles (New Structure) --- */
+.metric-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    /* Fix stack */
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 160px;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-2px);
+}
+
+/* Specific Card Backgrounds for Legacy (to match old look) */
+#card-cpu-legacy {
+    background: var(--grad-1);
+}
+
+#card-mem-legacy {
+    background: var(--grad-2);
+}
+
+#card-disk-legacy {
+    background: var(--grad-3);
+}
+
+#card-net-legacy {
+    background: var(--grad-4);
+}
+
+.metric-card .card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 5px;
+    position: relative;
+    z-index: 2;
+}
+
+.metric-card .card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    opacity: 0.9;
+    color: white;
+}
+
+.metric-icon {
+    font-size: 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-value-group {
+    position: relative;
+    z-index: 2;
+}
+
+.metric-value-group .value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    margin: 10px 0 5px 0;
+    line-height: 1;
+}
+
+.metric-value-group .sub-value {
+    font-size: 0.85rem;
+    opacity: 0.8;
+}
+
+/* Native Card Overrides */
+.metric-card.native-card {
+    background: var(--bg-native) !important;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.metric-card.native-card .value {
+    color: var(--text-native);
+}
+
+.metric-card.native-card .metric-icon.native {
+    background: rgba(46, 204, 113, 0.15);
+    color: var(--text-native);
+}
+
+.mini-label {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.2);
+    margin-left: 8px;
+    vertical-align: middle;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.mini-label.native {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+
+/* --- Main Chart & Info --- */
+.grid-2-1 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 25px;
+    margin-bottom: 25px;
+}
+
+.card-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--card-radius);
+    padding: 25px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.card-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+/* --- Detail Items --- */
+.detail-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.detail-item:last-child {
+    border: none;
+}
+
+/* --- Storage Grid --- */
+.storage-grid-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+    max-height: none;
+}
+
+.disk-card-mini {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s;
+}
+
+.disk-card-mini:hover {
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-2px);
+}
+
+.disk-info-head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.disk-path {
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 120px;
+}
+
+.disk-pct {
+    font-weight: bold;
+}
+
+.mini-progress-track {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+}
+
+.mini-progress-fill {
+    height: 100%;
+    border-radius: 3px;
+}
+
+@media (max-width: 1024px) {
+    .grid-2-1 {
+        grid-template-columns: 1fr;
+    }
+}

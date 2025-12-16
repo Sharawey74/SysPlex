@@ -1,0 +1,70 @@
+# .dockerignore
+# Exclude unnecessary files from Docker build context
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Documentation (except main README)
+docs/
+*.md
+!README.md
+!DOCKER_README.md
+
+# Reports (will be generated)
+reports/html/*.html
+reports/markdown/*.md
+
+# Logs and data (will be mounted as volumes)
+data/logs/*.log
+data/metrics/*.json
+data/metrics/temp/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# PowerShell scripts (not needed in Linux container)
+*.ps1
+scripts/monitors/windows/
+
+# Windows-specific files
+tests/windows/
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# Docker files from other methods
+Dockerfile.method1
+Dockerfile.method2
+docker-compose.method1.yml
+docker-compose.method2.yml

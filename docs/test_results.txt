@@ -1,0 +1,174 @@
+============================= test session starts =============================
+platform win32 -- Python 3.10.11, pytest-8.4.1, pluggy-1.6.0 -- C:\Users\DELL\AppData\Local\Programs\Python\Python310\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\DELL\Desktop\system-monitor-project-Batch
+plugins: anyio-4.9.0, dash-3.1.1, langsmith-0.4.31, cov-7.0.0, mock-3.15.1
+collecting ... collected 66 items
+
+tests/docker/test_bash_validation.py::TestMainMonitor::test_main_monitor_exists PASSED [  1%]
+tests/docker/test_bash_validation.py::TestMainMonitor::test_main_monitor_executable PASSED [  3%]
+tests/docker/test_bash_validation.py::TestMainMonitor::test_main_monitor_execution PASSED [  4%]
+tests/docker/test_bash_validation.py::TestMainMonitor::test_main_monitor_creates_json PASSED [  6%]
+tests/docker/test_bash_validation.py::TestMainMonitor::test_main_monitor_uses_host_proc PASSED [  7%]
+tests/docker/test_bash_validation.py::TestCPUMonitor::test_cpu_monitor_exists PASSED [  9%]
+tests/docker/test_bash_validation.py::TestCPUMonitor::test_cpu_monitor_execution PASSED [ 10%]
+tests/docker/test_bash_validation.py::TestCPUMonitor::test_cpu_monitor_output FAILED [ 12%]
+tests/docker/test_bash_validation.py::TestMemoryMonitor::test_memory_monitor_exists PASSED [ 13%]
+tests/docker/test_bash_validation.py::TestMemoryMonitor::test_memory_monitor_execution PASSED [ 15%]
+tests/docker/test_bash_validation.py::TestMemoryMonitor::test_memory_monitor_output FAILED [ 16%]
+tests/docker/test_bash_validation.py::TestDiskMonitor::test_disk_monitor_exists PASSED [ 18%]
+tests/docker/test_bash_validation.py::TestDiskMonitor::test_disk_monitor_execution PASSED [ 19%]
+tests/docker/test_bash_validation.py::TestDiskMonitor::test_disk_monitor_output FAILED [ 21%]
+tests/docker/test_bash_validation.py::TestNetworkMonitor::test_network_monitor_exists PASSED [ 22%]
+tests/docker/test_bash_validation.py::TestNetworkMonitor::test_network_monitor_execution PASSED [ 24%]
+tests/docker/test_bash_validation.py::TestNetworkMonitor::test_network_monitor_output FAILED [ 25%]
+tests/docker/test_bash_validation.py::TestProcessMonitor::test_process_monitor_exists FAILED [ 27%]
+tests/docker/test_bash_validation.py::TestProcessMonitor::test_process_monitor_execution FAILED [ 28%]
+tests/docker/test_bash_validation.py::TestProcessMonitor::test_process_monitor_output FAILED [ 30%]
+tests/docker/test_bash_validation.py::TestTemperatureMonitor::test_temperature_monitor_exists PASSED [ 31%]
+tests/docker/test_bash_validation.py::TestTemperatureMonitor::test_temperature_monitor_execution PASSED [ 33%]
+tests/docker/test_bash_validation.py::TestTemperatureMonitor::test_temperature_monitor_output FAILED [ 34%]
+tests/docker/test_bash_validation.py::TestGPUMonitor::test_gpu_monitor_exists FAILED [ 36%]
+tests/docker/test_bash_validation.py::TestGPUMonitor::test_gpu_monitor_execution FAILED [ 37%]
+tests/docker/test_bash_validation.py::TestGPUMonitor::test_gpu_monitor_output FAILED [ 39%]
+tests/docker/test_bash_validation.py::TestSmartMonitor::test_smart_monitor_exists PASSED [ 40%]
+tests/docker/test_bash_validation.py::TestSmartMonitor::test_smart_monitor_execution PASSED [ 42%]
+tests/docker/test_bash_validation.py::TestSmartMonitor::test_smart_monitor_output PASSED [ 43%]
+tests/docker/test_bash_validation.py::TestEnvironmentVariables::test_host_proc_variable PASSED [ 45%]
+tests/docker/test_bash_validation.py::TestEnvironmentVariables::test_host_sys_variable PASSED [ 46%]
+tests/docker/test_bash_validation.py::TestEnvironmentVariables::test_host_dev_variable PASSED [ 48%]
+tests/docker/test_bash_validation.py::TestErrorHandling::test_missing_proc_directory PASSED [ 50%]
+tests/docker/test_bash_validation.py::TestErrorHandling::test_invalid_json_recovery PASSED [ 51%]
+tests/docker/test_bash_validation.py::TestScriptPermissions::test_all_monitors_executable FAILED [ 53%]
+tests/docker/test_bash_validation.py::TestScriptPermissions::test_main_monitor_executable PASSED [ 54%]
+tests/docker/test_docker_metrics.py::TestDockerBuild::test_image_exists PASSED [ 56%]
+tests/docker/test_docker_metrics.py::TestDockerBuild::test_image_has_required_layers PASSED [ 57%]
+tests/docker/test_docker_metrics.py::TestContainerStartup::test_container_running PASSED [ 59%]
+tests/docker/test_docker_metrics.py::TestContainerStartup::test_container_health PASSED [ 60%]
+tests/docker/test_docker_metrics.py::TestContainerStartup::test_required_mounts PASSED [ 62%]
+tests/docker/test_docker_metrics.py::TestBashScripts::test_main_monitor_script_exists PASSED [ 63%]
+tests/docker/test_docker_metrics.py::TestBashScripts::test_main_monitor_executable PASSED [ 65%]
+tests/docker/test_docker_metrics.py::TestBashScripts::test_all_unix_monitors_exist PASSED [ 66%]
+tests/docker/test_docker_metrics.py::TestBashScripts::test_main_monitor_execution PASSED [ 68%]
+tests/docker/test_docker_metrics.py::TestMetricsCollection::test_metrics_file_created PASSED [ 69%]
+tests/docker/test_docker_metrics.py::TestMetricsCollection::test_metrics_valid_json PASSED [ 71%]
+tests/docker/test_docker_metrics.py::TestMetricsCollection::test_metrics_has_required_fields PASSED [ 72%]
+tests/docker/test_docker_metrics.py::TestMetricsCollection::test_docker_flag_set PASSED [ 74%]
+tests/docker/test_docker_metrics.py::TestSystemMetrics::test_cpu_metrics PASSED [ 75%]
+tests/docker/test_docker_metrics.py::TestSystemMetrics::test_memory_metrics PASSED [ 77%]
+tests/docker/test_docker_metrics.py::TestSystemMetrics::test_disk_metrics PASSED [ 78%]
+tests/docker/test_docker_metrics.py::TestSystemMetrics::test_network_metrics PASSED [ 80%]
+tests/docker/test_docker_metrics.py::TestToolAvailability::test_bash_available PASSED [ 81%]
+tests/docker/test_docker_metrics.py::TestToolAvailability::test_proc_filesystem_accessible PASSED [ 83%]
+tests/docker/test_docker_metrics.py::TestToolAvailability::test_sys_filesystem_accessible PASSED [ 84%]
+tests/docker/test_docker_metrics.py::TestToolAvailability::test_dev_filesystem_accessible PASSED [ 86%]
+tests/docker/test_docker_metrics.py::TestToolAvailability::test_python_available PASSED [ 87%]
+tests/docker/test_docker_metrics.py::TestToolAvailability::test_json_validation_works PASSED [ 89%]
+tests/docker/test_docker_metrics.py::TestEnvironmentVariables::test_host_proc_env_set PASSED [ 90%]
+tests/docker/test_docker_metrics.py::TestEnvironmentVariables::test_environment_variables_passed FAILED [ 92%]
+tests/docker/test_docker_metrics.py::TestWebAPI::test_api_health_endpoint PASSED [ 93%]
+tests/docker/test_docker_metrics.py::TestWebAPI::test_api_metrics_endpoint PASSED [ 95%]
+tests/docker/test_docker_metrics.py::TestGracefulDegradation::test_missing_sensors_handled PASSED [ 96%]
+tests/docker/test_docker_metrics.py::TestGracefulDegradation::test_missing_gpu_handled PASSED [ 98%]
+tests/docker/test_docker_metrics.py::TestGracefulDegradation::test_missing_smart_tools_handled PASSED [100%]
+
+================================== FAILURES ===================================
+___________________ TestCPUMonitor.test_cpu_monitor_output ____________________
+tests\docker\test_bash_validation.py:112: in test_cpu_monitor_output
+    assert "load_average" in data, "Missing load_average"
+E   AssertionError: Missing load_average
+E   assert 'load_average' in {'load_1': 0.22, 'load_15': 0.02, 'load_5': 0.05, 'logical_processors': 8, ...}
+________________ TestMemoryMonitor.test_memory_monitor_output _________________
+tests\docker\test_bash_validation.py:149: in test_memory_monitor_output
+    assert "percent_used" in data
+E   AssertionError: assert 'percent_used' in {'available_mb': 6913, 'free_mb': 6471, 'total_mb': 7804, 'used_mb': 724}
+__________________ TestDiskMonitor.test_disk_monitor_output ___________________
+tests\docker\test_bash_validation.py:186: in test_disk_monitor_output
+    assert "partition" in disk
+E   AssertionError: assert 'partition' in {'device': '/', 'filesystem': 'overlay', 'total_gb': 1006.85, 'used_gb': 4.92, ...}
+_______________ TestNetworkMonitor.test_network_monitor_output ________________
+tests\docker\test_bash_validation.py:223: in test_network_monitor_output
+    assert "interfaces" in data
+E   AssertionError: assert 'interfaces' in [{'iface': 'lo', 'rx_bytes': 91074, 'tx_bytes': 91074}, {'iface': 'eth0', 'rx_bytes': 1920, 'tx_bytes': 126}]
+_______________ TestProcessMonitor.test_process_monitor_exists ________________
+tests\docker\test_bash_validation.py:235: in test_process_monitor_exists
+    assert exit_code == 0
+E   assert 1 == 0
+______________ TestProcessMonitor.test_process_monitor_execution ______________
+tests\docker\test_bash_validation.py:244: in test_process_monitor_execution
+    assert exit_code == 0, f"process_monitor.sh failed: {output.decode()}"
+E   AssertionError: process_monitor.sh failed: bash: /app/scripts/monitors/unix/process_monitor.sh: No such file or directory
+E     
+E   assert 127 == 0
+_______________ TestProcessMonitor.test_process_monitor_output ________________
+tests\docker\test_bash_validation.py:256: in test_process_monitor_output
+    data = json.loads(output_str)
+..\..\AppData\Local\Programs\Python\Python310\lib\json\__init__.py:346: in loads
+    return _default_decoder.decode(s)
+..\..\AppData\Local\Programs\Python\Python310\lib\json\decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+..\..\AppData\Local\Programs\Python\Python310\lib\json\decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests\docker\test_bash_validation.py:261: in test_process_monitor_output
+    pytest.fail(f"Invalid JSON: {e}\nOutput: {output_str}")
+E   Failed: Invalid JSON: Expecting value: line 1 column 1 (char 0)
+E   Output: bash: /app/scripts/monitors/unix/process_monitor.sh: No such file or directory
+___________ TestTemperatureMonitor.test_temperature_monitor_output ____________
+tests\docker\test_bash_validation.py:293: in test_temperature_monitor_output
+    assert isinstance(data, list), "Expected array of temperature sensors"
+E   AssertionError: Expected array of temperature sensors
+E   assert False
+E    +  where False = isinstance({'status': 'unavailable'}, list)
+___________________ TestGPUMonitor.test_gpu_monitor_exists ____________________
+tests\docker\test_bash_validation.py:310: in test_gpu_monitor_exists
+    assert exit_code == 0
+E   assert 1 == 0
+__________________ TestGPUMonitor.test_gpu_monitor_execution __________________
+tests\docker\test_bash_validation.py:320: in test_gpu_monitor_execution
+    assert exit_code == 0, f"gpu_monitor.sh failed: {output.decode()}"
+E   AssertionError: gpu_monitor.sh failed: bash: /app/scripts/monitors/unix/gpu_monitor.sh: No such file or directory
+E     
+E   assert 127 == 0
+___________________ TestGPUMonitor.test_gpu_monitor_output ____________________
+tests\docker\test_bash_validation.py:332: in test_gpu_monitor_output
+    data = json.loads(output_str)
+..\..\AppData\Local\Programs\Python\Python310\lib\json\__init__.py:346: in loads
+    return _default_decoder.decode(s)
+..\..\AppData\Local\Programs\Python\Python310\lib\json\decoder.py:337: in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+..\..\AppData\Local\Programs\Python\Python310\lib\json\decoder.py:355: in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+E   json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+
+During handling of the above exception, another exception occurred:
+tests\docker\test_bash_validation.py:341: in test_gpu_monitor_output
+    pytest.fail(f"Invalid JSON: {e}\nOutput: {output_str}")
+E   Failed: Invalid JSON: Expecting value: line 1 column 1 (char 0)
+E   Output: bash: /app/scripts/monitors/unix/gpu_monitor.sh: No such file or directory
+_____________ TestScriptPermissions.test_all_monitors_executable ______________
+tests\docker\test_bash_validation.py:482: in test_all_monitors_executable
+    assert exit_code == 0, f"{monitor} is not executable"
+E   AssertionError: /app/scripts/monitors/unix/process_monitor.sh is not executable
+E   assert 1 == 0
+_________ TestEnvironmentVariables.test_environment_variables_passed __________
+tests\docker\test_docker_metrics.py:348: in test_environment_variables_passed
+    assert "/host/proc" in output_str or "/proc" in output_str
+E   AssertionError: assert ('/host/proc' in 'Monitoring data written to:\n  - Platform-specific: /app/data/metrics/unix_current.json\n  - Latest run: /app/data/metrics/current.json' or '/proc' in 'Monitoring data written to:\n  - Platform-specific: /app/data/metrics/unix_current.json\n  - Latest run: /app/data/metrics/current.json')
+=========================== short test summary info ===========================
+FAILED tests/docker/test_bash_validation.py::TestCPUMonitor::test_cpu_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestMemoryMonitor::test_memory_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestDiskMonitor::test_disk_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestNetworkMonitor::test_network_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestProcessMonitor::test_process_monitor_exists
+FAILED tests/docker/test_bash_validation.py::TestProcessMonitor::test_process_monitor_execution
+FAILED tests/docker/test_bash_validation.py::TestProcessMonitor::test_process_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestTemperatureMonitor::test_temperature_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestGPUMonitor::test_gpu_monitor_exists
+FAILED tests/docker/test_bash_validation.py::TestGPUMonitor::test_gpu_monitor_execution
+FAILED tests/docker/test_bash_validation.py::TestGPUMonitor::test_gpu_monitor_output
+FAILED tests/docker/test_bash_validation.py::TestScriptPermissions::test_all_monitors_executable
+FAILED tests/docker/test_docker_metrics.py::TestEnvironmentVariables::test_environment_variables_passed
+================== 13 failed, 53 passed in 81.11s (0:01:21) ===================

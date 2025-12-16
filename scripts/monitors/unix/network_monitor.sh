@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # Network Monitor - Collects network interface statistics
+# Docker-compatible: Uses PROC_PATH and SYS_PATH environment variables
 
 set -euo pipefail
+
+# Use environment variables for paths (Docker support)
+PROC_PATH="${PROC_PATH:-/proc}"
+SYS_PATH="${SYS_PATH:-/sys}"
 
 get_network_stats() {
     local networks="["
@@ -37,7 +42,7 @@ get_network_stats() {
             fi
             networks+="{\"iface\":\"$iface\",\"rx_bytes\":$rx_bytes,\"tx_bytes\":$tx_bytes}"
             first=false
-        done < /proc/net/dev
+        done < "$PROC_PATH/net/dev"
     elif command -v netstat &> /dev/null; then
         # macOS and others - use netstat
         while IFS= read -r line; do

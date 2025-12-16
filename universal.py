@@ -35,7 +35,7 @@ logger = logging.getLogger(__name__)
 
 # Project paths
 PROJECT_ROOT = Path(__file__).parent
-WINDOWS_MONITOR = PROJECT_ROOT / "scripts" / "main_monitor.ps1"
+WINDOWS_MONITOR = PROJECT_ROOT / "windows" / "scripts" / "main_monitor.ps1"
 UNIX_MONITOR = PROJECT_ROOT / "scripts" / "main_monitor.sh"
 DASHBOARD_SCRIPT = PROJECT_ROOT / "dashboard_tui.py"
 METRICS_OUTPUT = PROJECT_ROOT / "data" / "metrics" / "current.json"
@@ -53,9 +53,12 @@ def detect_os():
     return os_type
 
 
-def run_windows_monitor():
+def run_windows_monitor(skip_elevation=False):
     """
     Execute Windows monitoring script using PowerShell.
+    
+    Args:
+        skip_elevation: Skip elevation check (use when already running as admin)
     
     Returns:
         bool: True if successful, False otherwise
@@ -68,13 +71,19 @@ def run_windows_monitor():
     
     try:
         # Run PowerShell script
+        cmd = [
+            "powershell.exe",
+            "-ExecutionPolicy", "Bypass",
+            "-NoProfile",
+            "-File", str(WINDOWS_MONITOR)
+        ]
+        
+        # Add -SkipElevation flag in continuous monitoring mode
+        if skip_elevation:
+            cmd.append("-SkipElevation")
+        
         result = subprocess.run(
-            [
-                "powershell.exe",
-                "-ExecutionPolicy", "Bypass",
-                "-NoProfile",
-                "-File", str(WINDOWS_MONITOR)
-            ],
+            cmd,
             capture_output=True,
             text=True,
             timeout=60
@@ -148,25 +157,30 @@ def run_unix_monitor():
         return False
 
 
-def run_monitoring():
+def run_monitoring(skip_elevation=False):
     """
     Run the appropriate monitoring script based on OS detection.
+    
+    Args:
+        skip_elevation: Skip elevation check (use in continuous mode after first run)
     
     Returns:
         bool: True if monitoring completed successfully, False otherwise
     """
     os_type = detect_os()
     
-    print("=" * 60)
-    print("UNIVERSAL SYSTEM MONITOR")
-    print("=" * 60)
-    print(f"Detected OS: {os_type}")
-    print(f"Monitor script: ", end="")
+    if not skip_elevation:
+        print("=" * 60)
+        print("UNIVERSAL SYSTEM MONITOR")
+        print("=" * 60)
+        print(f"Detected OS: {os_type}")
+        print(f"Monitor script: ", end="")
     
     if os_type == "Windows":
-        print(f"{WINDOWS_MONITOR.name}")
-        print("-" * 60)
-        success = run_windows_monitor()
+        if not skip_elevation:
+            print(f"{WINDOWS_MONITOR.name}")
+            print("-" * 60)
+        success = run_windows_monitor(skip_elevation)
         
     elif os_type in ["Linux", "Darwin"]:
         print(f"{UNIX_MONITOR.name}")
@@ -197,48 +211,83 @@ def run_monitoring():
     return success
 
 
-def launch_dashboard():
+def launch_dashboard(dashboard_type='web'):
     """
-    Launch the terminal dashboard.
+    Launch the dashboard (web or TUI).
+    
+    Args:
+        dashboard_type: 'web' for Flask web dashboard, 'tui' for terminal dashboard
     
     Returns:
         subprocess.Popen: Dashboard process
     """
-    logger.info("Launching terminal dashboard...")
+    if dashboard_type == 'web':
+        web_script = PROJECT_ROOT / "dashboard_web.py"
+        logger.info("Launching web dashboard...")
+        
+        if not web_script.exists():
+            logger.error(f"Web dashboard script not found: {web_script}")
+            print(f"✗ Web dashboard not found: {web_script}")
+            return None
+        
+        try:
+            print("\nLaunching web dashboard on http://localhost:5000")
+            print("Press Ctrl+C to stop the server\n")
+            
+            # Launch web dashboard (blocks until user exits)
+            process = subprocess.run(
+                [sys.executable, str(web_script)],
+                check=False
+            )
+            
+            return process
+            
+        except KeyboardInterrupt:
+            logger.info("Web dashboard stopped by user")
+            print("\n✓ Web dashboard stopped")
+            return None
+        except Exception as e:
+            logger.error(f"Error launching web dashboard: {e}")
+            print(f"✗ Error launching web dashboard: {e}")
+            return None
     
-    if not DASHBOARD_SCRIPT.exists():
-        logger.error(f"Dashboard script not found: {DASHBOARD_SCRIPT}")
-        print(f"✗ Dashboard not found: {DASHBOARD_SCRIPT}")
-        return None
-    
-    try:
-        print("\nLaunching dashboard...")
-        print("Press Ctrl+C to exit\n")
+    else:  # TUI dashboard
+        logger.info("Launching terminal dashboard...")
         
-        # Launch dashboard (blocks until user exits)
-        process = subprocess.run(
-            [sys.executable, str(DASHBOARD_SCRIPT)],
-            check=False
-        )
+        if not DASHBOARD_SCRIPT.exists():
+            logger.error(f"Dashboard script not found: {DASHBOARD_SCRIPT}")
+            print(f"✗ Dashboard not found: {DASHBOARD_SCRIPT}")
+            return None
         
-        return process
-        
-    except KeyboardInterrupt:
-        logger.info("Dashboard stopped by user")
-        print("\n✓ Dashboard stopped")
-        return None
-    except Exception as e:
-        logger.error(f"Error launching dashboard: {e}")
-        print(f"✗ Error launching dashboard: {e}")
-        return None
+        try:
+            print("\nLaunching dashboard...")
+            print("Press Ctrl+C to exit\n")
+            
+            # Launch dashboard (blocks until user exits)
+            process = subprocess.run(
+                [sys.executable, str(DASHBOARD_SCRIPT)],
+                check=False
+            )
+            
+            return process
+            
+        except KeyboardInterrupt:
+            logger.info("Dashboard stopped by user")
+            print("\n✓ Dashboard stopped")
+            return None
+        except Exception as e:
+            logger.error(f"Error launching dashboard: {e}")
+            print(f"✗ Error launching dashboard: {e}")
+            return None
 
 
-def watch_mode(interval=30):
+def watch_mode(interval=30, with_dashboard=False):
     """
     Continuous monitoring mode - runs monitors at regular intervals.
     
     Args:
         interval: Seconds between monitoring runs (default: 30)
+        with_dashboard: If True, launches web dashboard in background
     """
     logger.info(f"Starting watch mode (interval: {interval}s)")
     print("\n" + "=" * 60)
@@ -248,24 +297,67 @@ def watch_mode(interval=30):
     print("Press Ctrl+C to stop")
     print("=" * 60 + "\n")
     
+    dashboard_process = None
+    
+    # Launch dashboard in background if requested
+    if with_dashboard:
+        try:
+            import threading
+            
+            def run_dashboard():
+                """Run Flask dashboard in a separate thread"""
+                web_script = PROJECT_ROOT / "dashboard_web.py"
+                subprocess.run([sys.executable, str(web_script)])
+            
+            print("🌐 Launching web dashboard in background...")
+            print(f"📊 Dashboard URL: http://localhost:5000")
+            print(f"📊 Alternative URL: http://127.0.0.1:5000")
+            print("")
+            
+            # Start dashboard in a daemon thread
+            dashboard_thread = threading.Thread(target=run_dashboard, daemon=True)
+            dashboard_thread.start()
+            
+            time.sleep(3)  # Give dashboard time to start
+            
+            print("✓ Dashboard started successfully on port 5000")
+            print("✓ Open http://127.0.0.1:5000 in your browser")
+            print("")
+            
+            # Store thread reference
+            dashboard_process = dashboard_thread
+                
+        except Exception as e:
+            logger.error(f"Failed to start dashboard: {e}")
+            print(f"✗ Dashboard error: {e}")
+            dashboard_process = None
+    
     try:
         iteration = 1
         while True:
             print(f"\n[Iteration {iteration}] {time.strftime('%Y-%m-%d %H:%M:%S')}")
             
-            success = run_monitoring()
+            # Skip elevation check after first run (already running as admin)
+            success = run_monitoring(skip_elevation=(iteration > 1))
             
             if not success:
                 logger.warning(f"Monitoring failed in iteration {iteration}")
+            else:
+                print(f"✓ Metrics updated in {METRICS_OUTPUT.name}")
             
             iteration += 1
             
-            print(f"\nNext update in {interval} seconds...")
+            print(f"Next update in {interval} seconds...")
             time.sleep(interval)
             
     except KeyboardInterrupt:
         print("\n\n✓ Watch mode stopped by user")
         logger.info("Watch mode stopped by user")
+    finally:
+        # Clean up dashboard (thread will terminate automatically)
+        if dashboard_process:
+            print("\nStopping dashboard...")
+            print("✓ Dashboard stopped")
 
 
 def main():
@@ -275,17 +367,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python universal.py                      # Run monitors once
-  python universal.py --dashboard          # Run monitors + show dashboard
-  python universal.py --watch              # Continuous monitoring (30s interval)
-  python universal.py --watch --interval 60  # Custom interval
-  python universal.py -d -w -i 10          # Dashboard + watch mode (10s)
+  python universal.py                              # Run monitors once + launch web dashboard
+  python universal.py --watch --interval 5         # Update metrics every 5s (no dashboard)
+  python universal.py --watch --dashboard -i 5     # LIVE monitoring: updates every 5s + web dashboard
+  python universal.py --tui                        # Run monitors + terminal dashboard
+  python universal.py -d -w -i 10                  # Dashboard + watch mode (10s interval)
 
 Workflow:
   1. Detect OS (Windows, Linux, macOS)
   2. Run platform-specific monitoring scripts
   3. Generate data/metrics/current.json
-  4. Optionally launch terminal dashboard
+  4. Optionally launch web dashboard (reads current.json every 5s)
+  5. With --watch --dashboard: Real-time monitoring (both update every 5s)
 
 Supported Platforms:
   - Windows (PowerShell)
@@ -297,7 +390,13 @@ Supported Platforms:
     parser.add_argument(
         "-d", "--dashboard",
         action="store_true",
-        help="Launch terminal dashboard after monitoring"
+        help="Launch web dashboard after monitoring (default behavior)"
+    )
+    
+    parser.add_argument(
+        "--tui",
+        action="store_true",
+        help="Launch terminal (TUI) dashboard instead of web dashboard"
     )
     
     parser.add_argument(
@@ -332,14 +431,14 @@ Supported Platforms:
             print("✗ Error: Interval must be at least 1 second")
             sys.exit(1)
         
-        # Watch mode
+        # Watch mode with optional dashboard
         if args.watch:
-            if args.dashboard:
-                print("✗ Error: Cannot use --dashboard with --watch mode")
-                print("   Tip: Run dashboard in separate terminal: python dashboard_tui.py")
-                sys.exit(1)
+            # Run initial monitoring
+            print("Running initial metrics collection...")
+            run_monitoring()
             
-            watch_mode(interval=args.interval)
+            # Start continuous monitoring with optional dashboard
+            watch_mode(interval=args.interval, with_dashboard=args.dashboard)
             sys.exit(0)
         
         # Single run mode
@@ -350,17 +449,22 @@ Supported Platforms:
             logger.error("Monitoring failed")
             sys.exit(1)
         
-        # Launch dashboard if requested
-        if args.dashboard:
-            if not METRICS_OUTPUT.exists():
-                print("\n✗ Cannot launch dashboard: metrics file not found")
-                sys.exit(1)
-            
-            launch_dashboard()
+        # Launch dashboard (web by default, TUI if --tui flag is set)
+        if not METRICS_OUTPUT.exists():
+            print("\n✗ Cannot launch dashboard: metrics file not found")
+            sys.exit(1)
+        
+        dashboard_type = 'tui' if args.tui else 'web'
+        
+        # Default behavior: always launch dashboard unless --no-dashboard would be added
+        if args.tui:
+            # User explicitly requested TUI
+            launch_dashboard(dashboard_type)
         else:
+            # Default: launch web dashboard automatically
             print("\n✓ Monitoring completed successfully")
-            print(f"\nTo view results, run:")
-            print(f"  python dashboard_tui.py")
+            print("🌐 Launching web dashboard...")
+            launch_dashboard('web')
         
         sys.exit(0)
         

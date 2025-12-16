@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # CPU Monitor - Collects CPU usage and load averages
+# Docker-compatible: Uses PROC_PATH environment variable
 
 set -euo pipefail
+
+# Use environment variable for /proc path (Docker support)
+PROC_PATH="${PROC_PATH:-/proc}"
 
 get_cpu_usage() {
     local usage=0
@@ -19,11 +23,11 @@ get_cpu_usage() {
             # Linux top format
             usage=$(top -bn2 | grep "Cpu(s)" | tail -1 | awk '{print $2}' | sed 's/%us,//')
         fi
-    elif [ -f /proc/stat ]; then
+    elif [ -f "$PROC_PATH/stat" ]; then
         # Calculate from /proc/stat (Linux)
-        read cpu user nice system idle iowait irq softirq steal guest < <(head -1 /proc/stat)
+        read cpu user nice system idle iowait irq softirq steal guest < <(head -1 "$PROC_PATH/stat")
         sleep 0.5
-        read cpu user2 nice2 system2 idle2 iowait2 irq2 softirq2 steal2 guest2 < <(head -1 /proc/stat)
+        read cpu user2 nice2 system2 idle2 iowait2 irq2 softirq2 steal2 guest2 < <(head -1 "$PROC_PATH/stat")
         
         total1=$((user + nice + system + idle + iowait + irq + softirq + steal))
         total2=$((user2 + nice2 + system2 + idle2 + iowait2 + irq2 + softirq2 + steal2))
@@ -46,9 +50,9 @@ get_load_averages() {
     local load_5=0
     local load_15=0
     
-    if [ -f /proc/loadavg ]; then
+    if [ -f "$PROC_PATH/loadavg" ]; then
         # Linux
-        read load_1 load_5 load_15 _ < /proc/loadavg
+        read load_1 load_5 load_15 _ < "$PROC_PATH/loadavg"
     elif command -v uptime &> /dev/null; then
         # macOS and others
         local loads=$(uptime | awk -F'load averages?: ' '{print $2}' | sed 's/,//g')
@@ -64,9 +68,9 @@ get_cpu_vendor() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         vendor=$(sysctl -n machdep.cpu.brand_string 2>/dev/null | awk '{print $1}')
-    elif [ -f /proc/cpuinfo ]; then
+    elif [ -f "$PROC_PATH/cpuinfo" ]; then
         # Linux
-        local vendor_id=$(grep -m1 "vendor_id" /proc/cpuinfo | cut -d: -f2 | xargs)
+        local vendor_id=$(grep -m1 "vendor_id" "$PROC_PATH/cpuinfo" | cut -d: -f2 | xargs)
         case "$vendor_id" in
             GenuineIntel) vendor="Intel" ;;
             AuthenticAMD) vendor="AMD" ;;
@@ -83,9 +87,9 @@ get_cpu_model() {
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
         model=$(sysctl -n machdep.cpu.brand_string 2>/dev/null)
-    elif [ -f /proc/cpuinfo ]; then
+    elif [ -f "$PROC_PATH/cpuinfo" ]; then
         # Linux
-        model=$(grep -m1 "model name" /proc/cpuinfo | cut -d: -f2 | xargs)
+        model=$(grep -m1 "model name" "$PROC_PATH/cpuinfo" | cut -d: -f2 | xargs)
     fi
     
     echo "${model:-unknown}"
@@ -100,9 +104,9 @@ get_logical_processors() {
     elif command -v nproc &> /dev/null; then
         # Linux with nproc
         processors=$(nproc)
-    elif [ -f /proc/cpuinfo ]; then
+    elif [ -f "$PROC_PATH/cpuinfo" ]; then
         # Linux fallback
-        processors=$(grep -c ^processor /proc/cpuinfo)
+        processors=$(grep -c ^processor "$PROC_PATH/cpuinfo")
     fi
     
     echo "${processors:-0}"

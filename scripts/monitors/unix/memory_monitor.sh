@@ -1,7 +1,11 @@
 #!/usr/bin/env bash
 # Memory Monitor - Collects memory statistics
+# Docker-compatible: Uses PROC_PATH environment variable
 
 set -euo pipefail
+
+# Use environment variable for /proc path (Docker support)
+PROC_PATH="${PROC_PATH:-/proc}"
 
 get_memory_stats() {
     local total_mb=0
@@ -17,11 +21,11 @@ get_memory_stats() {
         free_mb=$(echo "$mem_line" | awk '{print $4}')
         available_mb=$(echo "$mem_line" | awk '{print $7}')
         available_mb=${available_mb:-$free_mb}
-    elif [ -f /proc/meminfo ]; then
+    elif [ -f "$PROC_PATH/meminfo" ]; then
         # Linux via /proc/meminfo
-        total_kb=$(grep "^MemTotal:" /proc/meminfo | awk '{print $2}')
-        free_kb=$(grep "^MemFree:" /proc/meminfo | awk '{print $2}')
-        available_kb=$(grep "^MemAvailable:" /proc/meminfo | awk '{print $2}')
+        total_kb=$(grep "^MemTotal:" "$PROC_PATH/meminfo" | awk '{print $2}')
+        free_kb=$(grep "^MemFree:" "$PROC_PATH/meminfo" | awk '{print $2}')
+        available_kb=$(grep "^MemAvailable:" "$PROC_PATH/meminfo" | awk '{print $2}')
         available_kb=${available_kb:-$free_kb}
         
         total_mb=$((total_kb / 1024))
