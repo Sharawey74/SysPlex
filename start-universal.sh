@@ -35,44 +35,96 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 
 # ============================================
+# HELPER: Check and Install Dependencies
+# ============================================
+check_dependency() {
+    local cmd=$1
+    local package=$2
+    local install_cmd=$3
+
+    if ! command -v "$cmd" &> /dev/null; then
+        echo -e "${YELLOW}►${NC} $cmd is missing. Attempting auto-installation..."
+        if [ -n "$install_cmd" ]; then
+            eval "$install_cmd"
+        else
+            if command -v apt-get &> /dev/null; then
+                 echo -e "${YELLOW}►${NC} Running: sudo apt-get install -y $package"
+                 sudo apt-get update >/dev/null 2>&1
+                 sudo apt-get install -y "$package"
+            else
+                 echo -e "${RED}✗${NC} Cannot auto-install $package. Please install manually."
+                 exit 1
+            fi
+        fi
+        
+        # Verify again
+        if ! command -v "$cmd" &> /dev/null; then
+             echo -e "${RED}✗${NC} Failed to install $cmd."
+             echo "Please install manually: sudo apt-get install -y $package"
+             exit 1
+        fi
+        echo -e "${GREEN}✓${NC} $cmd installed successfully."
+    else
+        echo -e "${GREEN}✓${NC} $cmd found"
+    fi
+}
+
+# Check Core Dependencies
+echo -e "${BLUE}[0/4]${NC} Checking System Dependencies..."
+check_dependency "git" "git"
+check_dependency "curl" "curl"
+check_dependency "python3" "python3"
+
+# Check Monitoring Dependencies (Required for Legacy Agent)
+echo -e "${BLUE}[0.2/4]${NC} Checking Monitoring Tools..."
+check_dependency "sensors" "lm-sensors"
+check_dependency "mpstat" "sysstat"
+check_dependency "lspci" "pciutils"
+check_dependency "smartctl" "smartmontools"
+
+# Check pip (special case for python3-pip)
+if ! python3 -m pip --version > /dev/null 2>&1; then
+     echo -e "${YELLOW}►${NC} pip is missing. Installing python3-pip..."
+     if command -v apt-get &> /dev/null; then
+         sudo apt-get update >/dev/null 2>&1
+         sudo apt-get install -y python3-pip
+     else
+         echo -e "${RED}✗${NC} Please install pip manually: sudo apt-get install -y python3-pip"
+         exit 1
+     fi
+fi
+echo -e "${GREEN}✓${NC} pip modules found"
+
+# Check Docker (Critical)
+if ! command -v docker &> /dev/null; then
+    echo -e "${RED}✗${NC} Docker is missing!"
+    echo "This requires Docker Desktop (Windows/Mac) or Docker Engine (Linux)."
+    echo "Automatic installation of Docker is risky. Please install Docker Desktop manually."
+    exit 1
+fi
+echo -e "${GREEN}✓${NC} Docker found"
+
+
+# ============================================
 # STEP 0: Check/Download Host API Scripts
 # ============================================
-echo -e "${BLUE}[0/3]${NC} Checking Host API scripts..."
-
+echo -e "${BLUE}[0.5/4]${NC} Checking Host API scripts..."
 if [ ! -d "$HOST_DIR" ] || [ ! -f "$HOST_DIR/api/server.py" ]; then
     echo -e "${YELLOW}⚠${NC}  Host API scripts not found locally"
     echo -e "${YELLOW}►${NC}  Downloading Host API scripts from GitHub..."
-    echo ""
-    
-    # Remove old temp directory if exists
     rm -rf "$TEMP_CLONE_DIR"
+    git clone --depth 1 --filter=blob:none --sparse https://github.com/Sharawey74/system-monitor-project.git "$TEMP_CLONE_DIR" 2>/dev/null
     
-    # Clone only the Host directory
-    if git clone --depth 1 --filter=blob:none --sparse https://github.com/Sharawey74/system-monitor-project.git "$TEMP_CLONE_DIR" 2>/dev/null; then
+    if [ $? -eq 0 ]; then
         cd "$TEMP_CLONE_DIR"
         git sparse-checkout set Host
-        
-        # Copy Host directory to project root
         if [ -d "$TEMP_CLONE_DIR/Host" ]; then
             cp -r "$TEMP_CLONE_DIR/Host" "$PROJECT_ROOT/"
             echo -e "${GREEN}✓${NC}  Host API scripts downloaded successfully"
-        else
-            echo -e "${RED}✗${NC}  Failed to download Host API scripts"
-            echo ""
-            echo "Please clone the full repository manually:"
-            echo "  git clone https://github.com/Sharawey74/system-monitor-project.git"
-            exit 1
         fi
-        
-        # Cleanup
         rm -rf "$TEMP_CLONE_DIR"
-    else
-        echo -e "${RED}✗${NC}  Failed to download from GitHub"
-        echo ""
-        echo "Please ensure you have:"
-        echo "  1. Git installed: sudo apt-get install git"
-        echo "  2. Internet connection"
-        echo "  3. Or clone manually: git clone https://github.com/Sharawey74/system-monitor-project.git"
+    else 
+        echo -e "${RED}✗${NC} Global download failed. Check internet."
         exit 1
     fi
 else
@@ -97,12 +149,13 @@ else
     echo -e "${YELLOW}►${NC} Checking Python dependencies..."
     if ! python3 -c "import fastapi, uvicorn" 2>/dev/null; then
         echo -e "${YELLOW}►${NC} Installing Python dependencies (fastapi, uvicorn)..."
-        pip3 install --break-system-packages fastapi uvicorn 2>/dev/null || \
-        pip3 install --user fastapi uvicorn || {
-            echo -e "${RED}✗${NC} Failed to install dependencies"
-            echo ""
-            echo "Please install manually:"
-            echo "  pip3 install fastapi uvicorn"
+        python3 -m pip install --break-system-packages fastapi uvicorn 2>/dev/null || \
+        python3 -m pip install --user fastapi uvicorn || {
+            echo -e "${RED}✗${NC} Failed to install dependencies."
+            echo "It seems 'pip' is missing or failed."
+            echo "Try installing pip manually first:"
+            echo "  sudo apt update && sudo apt install -y python3-pip"
+            echo "Then run this script again."
             exit 1
         }
     fi

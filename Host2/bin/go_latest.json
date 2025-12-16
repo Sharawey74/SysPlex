@@ -1,14 +1,14 @@
 {
-  "timestamp": "2025-12-16T18:33:40Z",
+  "timestamp": "2025-12-16T22:06:15Z",
   "platform": "windows",
   "system": {
     "os": "windows",
     "hostname": "DESKTOP-T6GSL92",
-    "uptime_seconds": 118528,
+    "uptime_seconds": 131284,
     "kernel": "10.0.26200.7462 Build 26200.7462"
   },
   "cpu": {
-    "usage_percent": 38.46153846153847,
+    "usage_percent": 46.15384615384615,
     "logical_processors": 8,
     "load_1": 0,
     "load_5": 0,
@@ -19,10 +19,10 @@
   },
   "memory": {
     "total_mb": 16106,
-    "used_mb": 15035,
-    "free_mb": 1071,
-    "available_mb": 1071,
-    "usage_percent": 93,
+    "used_mb": 14256,
+    "free_mb": 1850,
+    "available_mb": 1850,
+    "usage_percent": 88,
     "status": "ok"
   },
   "disk": [
@@ -30,8 +30,8 @@
       "device": "C:",
       "filesystem": "NTFS",
       "total_gb": 475.2829818725586,
-      "used_gb": 374.56035232543945,
-      "used_percent": 78.80786112932469
+      "used_gb": 375.8005485534668,
+      "used_percent": 79.0687996176209
     },
     {
       "device": "D:",
@@ -57,7 +57,7 @@
     {
       "iface": "vEthernet (Default Switch)",
       "rx_bytes": 0,
-      "tx_bytes": 1530760
+      "tx_bytes": 1750795
     },
     {
       "iface": "Local Area Connection* 1",
@@ -71,18 +71,18 @@
     },
     {
       "iface": "VMware Network Adapter VMnet1",
-      "rx_bytes": 28,
-      "tx_bytes": 1997
+      "rx_bytes": 58,
+      "tx_bytes": 4408
     },
     {
       "iface": "VMware Network Adapter VMnet8",
-      "rx_bytes": 28,
-      "tx_bytes": 3306
+      "rx_bytes": 58,
+      "tx_bytes": 6797
     },
     {
       "iface": "Wi-Fi",
-      "rx_bytes": 689943022,
-      "tx_bytes": 184481353
+      "rx_bytes": 893701148,
+      "tx_bytes": 550387813
     },
     {
       "iface": "Loopback Pseudo-Interface 1",
@@ -91,8 +91,8 @@
     },
     {
       "iface": "vEthernet (WSL (Hyper-V firewall))",
-      "rx_bytes": 410845,
-      "tx_bytes": 5863786
+      "rx_bytes": 505937,
+      "tx_bytes": 6193725
     }
   ],
   "temperature": {
@@ -112,7 +112,7 @@
         "utilization_percent": 0,
         "memory_used_mb": 0,
         "memory_total_mb": 2048,
-        "temperature_celsius": 67,
+        "temperature_celsius": 61,
         "status": "ok"
       }
     ]

@@ -258,13 +258,13 @@ func getTempFromGopsutil() int {
 	return 0
 }
 
-// getTempFromWMI queries Windows WMI for temperature
+// getTempFromWMI queries Windows WMI for temperature - ENHANCED with multiple methods
 func getTempFromWMI() int {
 	if runtime.GOOS != "windows" {
 		return 0
 	}
 
-	// Try MSAcpi_ThermalZoneTemperature
+	// METHOD 1: Try MSAcpi_ThermalZoneTemperature (most reliable)
 	cmd := exec.Command("wmic", "/namespace:\\\\root\\wmi", "PATH", "MSAcpi_ThermalZoneTemperature", "GET", "CurrentTemperature")
 	output, err := cmd.Output()
 	if err == nil {
@@ -285,7 +285,7 @@ func getTempFromWMI() int {
 		}
 	}
 
-	// Try Win32_TemperatureProbe
+	// METHOD 2: Try Win32_TemperatureProbe
 	cmd = exec.Command("wmic", "path", "Win32_TemperatureProbe", "get", "CurrentReading")
 	output, err = cmd.Output()
 	if err == nil {
@@ -301,6 +301,52 @@ func getTempFromWMI() int {
 				if celsius > 0 && celsius < 150 {
 					return celsius
 				}
+			}
+		}
+	}
+
+	// METHOD 3: Try Win32_PerfFormattedData_Counters_ThermalZoneInformation
+	cmd = exec.Command("wmic", "path", "Win32_PerfFormattedData_Counters_ThermalZoneInformation", "get", "Temperature")
+	output, err = cmd.Output()
+	if err == nil {
+		lines := strings.Split(string(output), "\n")
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.Contains(line, "Temperature") {
+				continue
+			}
+			if temp, err := strconv.Atoi(line); err == nil {
+				// This returns Kelvin directly
+				celsius := temp - 273
+				if celsius > 0 && celsius < 150 {
+					return celsius
+				}
+			}
+		}
+	}
+
+	// METHOD 4: Try PowerShell WMI query (more reliable on some systems)
+	cmd = exec.Command("powershell", "-Command", "(Get-WmiObject -Namespace root/wmi -Class MSAcpi_ThermalZoneTemperature | Select-Object -First 1).CurrentTemperature")
+	output, err = cmd.Output()
+	if err == nil {
+		line := strings.TrimSpace(string(output))
+		if temp, err := strconv.Atoi(line); err == nil {
+			celsius := (temp / 10) - 273
+			if celsius > 0 && celsius < 150 {
+				return celsius
+			}
+		}
+	}
+
+	// METHOD 5: Try CIM (newer Windows interface)
+	cmd = exec.Command("powershell", "-Command", "(Get-CimInstance -ClassName CIM_TemperatureSensor | Select-Object -First 1).CurrentReading")
+	output, err = cmd.Output()
+	if err == nil {
+		line := strings.TrimSpace(string(output))
+		if temp, err := strconv.ParseFloat(line, 64); err == nil {
+			celsius := int(temp)
+			if celsius > 0 && celsius < 150 {
+				return celsius
 			}
 		}
 	}
@@ -322,38 +368,112 @@ func getTempFromExternalTools() int {
 	}
 }
 
-// getTempFromLinuxSensors uses lm-sensors on Linux
+// getTempFromLinuxSensors uses lm-sensors on Linux - ENHANCED with multiple fallbacks
 func getTempFromLinuxSensors() int {
+	// METHOD 1: Try sensors command (lm-sensors package)
 	cmd := exec.Command("sensors", "-u")
 	output, err := cmd.Output()
-	if err != nil {
-		return 0
-	}
-
-	lines := strings.Split(string(output), "\n")
-	for _, line := range lines {
-		// Look for coretemp or k10temp (AMD/Intel)
-		if strings.Contains(line, "_input:") && (strings.Contains(line, "temp") || strings.Contains(line, "Core")) {
-			fields := strings.Fields(line)
-			if len(fields) >= 2 {
-				if temp, err := strconv.ParseFloat(fields[1], 64); err == nil {
-					if temp > 0 && temp < 150 {
-						return int(temp)
+	if err == nil {
+		lines := strings.Split(string(output), "\n")
+		for _, line := range lines {
+			// Look for coretemp or k10temp (AMD/Intel)
+			if strings.Contains(line, "_input:") && (strings.Contains(line, "temp") || strings.Contains(line, "Core")) {
+				fields := strings.Fields(line)
+				if len(fields) >= 2 {
+					if temp, err := strconv.ParseFloat(fields[1], 64); err == nil {
+						if temp > 0 && temp < 150 {
+							return int(temp)
+						}
 					}
 				}
 			}
 		}
 	}
 
-	// Try reading from /sys/class/thermal
-	cmd = exec.Command("cat", "/sys/class/thermal/thermal_zone0/temp")
-	output, err = cmd.Output()
-	if err == nil {
-		if temp, err := strconv.Atoi(strings.TrimSpace(string(output))); err == nil {
-			// Linux reports in millidegrees
+	// METHOD 2: Try /sys/class/hwmon (direct kernel interface)
+	hwmonDirs, _ := filepath.Glob("/sys/class/hwmon/hwmon*")
+	for _, hwmonDir := range hwmonDirs {
+		// Read hwmon name to identify CPU sensors
+		nameBytes, err := os.ReadFile(filepath.Join(hwmonDir, "name"))
+		if err != nil {
+			continue
+		}
+		name := strings.ToLower(strings.TrimSpace(string(nameBytes)))
+
+		// Look for CPU-related sensors (coretemp, k10temp, zenpower)
+		if strings.Contains(name, "coretemp") || strings.Contains(name, "k10temp") ||
+			strings.Contains(name, "zenpower") || strings.Contains(name, "cpu") {
+			// Find temperature input files
+			tempFiles, _ := filepath.Glob(filepath.Join(hwmonDir, "temp*_input"))
+			for _, tempFile := range tempFiles {
+				tempBytes, err := os.ReadFile(tempFile)
+				if err != nil {
+					continue
+				}
+				if temp, err := strconv.Atoi(strings.TrimSpace(string(tempBytes))); err == nil {
+					celsius := temp / 1000 // Convert from millidegrees
+					if celsius > 0 && celsius < 150 {
+						return celsius
+					}
+				}
+			}
+		}
+	}
+
+	// METHOD 3: Try /sys/class/thermal/thermal_zone* (thermal zones)
+	thermalZones, _ := filepath.Glob("/sys/class/thermal/thermal_zone*/temp")
+	for _, zoneTempFile := range thermalZones {
+		tempBytes, err := os.ReadFile(zoneTempFile)
+		if err != nil {
+			continue
+		}
+		if temp, err := strconv.Atoi(strings.TrimSpace(string(tempBytes))); err == nil {
 			celsius := temp / 1000
 			if celsius > 0 && celsius < 150 {
 				return celsius
+			}
+		}
+	}
+
+	// METHOD 4: Try acpi command (if available)
+	cmd = exec.Command("acpi", "-t")
+	output, err = cmd.Output()
+	if err == nil {
+		lines := strings.Split(string(output), "\n")
+		for _, line := range lines {
+			if strings.Contains(line, "ok,") {
+				// Parse format: "Thermal 0: ok, 45.0 degrees C"
+				parts := strings.Split(line, ",")
+				if len(parts) >= 2 {
+					tempStr := strings.TrimSpace(parts[1])
+					tempStr = strings.Split(tempStr, " ")[0]
+					if temp, err := strconv.ParseFloat(tempStr, 64); err == nil {
+						if temp > 0 && temp < 150 {
+							return int(temp)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// METHOD 5: Try reading CPU package temperature directly
+	packageTempFiles := []string{
+		"/sys/devices/platform/coretemp.0/hwmon/hwmon*/temp1_input", // Intel
+		"/sys/devices/platform/k10temp.0/hwmon/hwmon*/temp1_input",  // AMD
+	}
+	for _, pattern := range packageTempFiles {
+		matches, _ := filepath.Glob(pattern)
+		for _, match := range matches {
+			tempBytes, err := os.ReadFile(match)
+			if err != nil {
+				continue
+			}
+			if temp, err := strconv.Atoi(strings.TrimSpace(string(tempBytes))); err == nil {
+				celsius := temp / 1000
+				if celsius > 0 && celsius < 150 {
+					return celsius
+				}
 			}
 		}
 	}

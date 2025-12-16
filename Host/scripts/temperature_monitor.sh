@@ -67,8 +67,8 @@ get_temperature_stats() {
     # WSL2 PowerShell Temperature Support
     # ========================================
     if is_wsl2; then
-        # Try PowerShell WMI for CPU temperature
-        if command -v powershell.exe &> /dev/null; then
+        # METHOD 1: Try PowerShell WMI MSAcpi_ThermalZoneTemperature
+        if command -v powershell.exe &> /dev/null && [ "$cpu_temp" = "0" ]; then
             local wmi_temp=$(powershell.exe -Command "(Get-WmiObject MSAcpi_ThermalZoneTemperature -Namespace root/wmi | Select-Object -First 1).CurrentTemperature" 2>/dev/null | tr -d '\r\n' | xargs)
             
             if [ -n "$wmi_temp" ] && [[ "$wmi_temp" =~ ^[0-9]+$ ]]; then
@@ -77,7 +77,43 @@ get_temperature_stats() {
             fi
         fi
         
-        # Try PowerShell for GPU temperature (NVIDIA)
+        # METHOD 2: Try Win32_TemperatureProbe via PowerShell
+        if [ "$cpu_temp" = "0" ] && command -v powershell.exe &> /dev/null; then
+            local probe_temp=$(powershell.exe -Command "(Get-WmiObject -Class Win32_TemperatureProbe | Select-Object -First 1).CurrentReading" 2>/dev/null | tr -d '\r\n' | xargs)
+            
+            if [ -n "$probe_temp" ] && [[ "$probe_temp" =~ ^[0-9]+$ ]]; then
+                cpu_temp=$(awk "BEGIN {printf \"%.1f\", ($probe_temp / 10) - 273.15}")
+            fi
+        fi
+        
+        # METHOD 3: Try Win32_PerfFormattedData_Counters_ThermalZoneInformation
+        if [ "$cpu_temp" = "0" ] && command -v powershell.exe &> /dev/null; then
+            local thermal_temp=$(powershell.exe -Command "(Get-WmiObject -Class Win32_PerfFormattedData_Counters_ThermalZoneInformation | Select-Object -First 1).Temperature" 2>/dev/null | tr -d '\r\n' | xargs)
+            
+            if [ -n "$thermal_temp" ] && [[ "$thermal_temp" =~ ^[0-9]+$ ]]; then
+                cpu_temp=$(awk "BEGIN {printf \"%.1f\", $thermal_temp - 273.15}")
+            fi
+        fi
+        
+        # METHOD 4: Try CIM TemperatureSensor
+        if [ "$cpu_temp" = "0" ] && command -v powershell.exe &> /dev/null; then
+            local cim_temp=$(powershell.exe -Command "(Get-CimInstance -ClassName CIM_TemperatureSensor | Select-Object -First 1).CurrentReading" 2>/dev/null | tr -d '\r\n' | xargs)
+            
+            if [ -n "$cim_temp" ] && [[ "$cim_temp" =~ ^[0-9.]+$ ]]; then
+                cpu_temp=$(awk "BEGIN {printf \"%.1f\", $cim_temp}")
+            fi
+        fi
+        
+        # METHOD 5: Try WMIC command directly
+        if [ "$cpu_temp" = "0" ] && command -v wmic.exe &> /dev/null; then
+            local wmic_temp=$(wmic.exe /namespace:'\\root\wmi' PATH MSAcpi_ThermalZoneTemperature GET CurrentTemperature 2>/dev/null | grep -oP '^\s*\d+\s*$' | head -1 | xargs)
+            
+            if [ -n "$wmic_temp" ] && [[ "$wmic_temp" =~ ^[0-9]+$ ]]; then
+                cpu_temp=$(awk "BEGIN {printf \"%.1f\", ($wmic_temp / 10) - 273.15}")
+            fi
+        fi
+        
+        # GPU TEMPERATURE via PowerShell (NVIDIA)
         if [ "$gpu_temp" = "0" ] && command -v powershell.exe &> /dev/null; then
             local gpu_wmi=$(powershell.exe -Command "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits" 2>/dev/null | tr -d '\r\n' | xargs)
             if [ -n "$gpu_wmi" ] && [[ "$gpu_wmi" =~ ^[0-9]+$ ]]; then
@@ -137,55 +173,123 @@ get_temperature_stats() {
         cpu_temp=${cpu_temp:-0}
     fi
     
-    # METHOD 2: lm-sensors (enhanced patterns)
+    # METHOD 2: lm-sensors
     if [ "$cpu_temp" = "0" ] && command -v sensors &> /dev/null; then
-        local sensors_output=$(sensors 2>/dev/null)
-        # Try multiple patterns: Core 0, CPU, Tctl (AMD), Tdie (AMD Ryzen), Package id (Intel)
-        cpu_temp=$(echo "$sensors_output" | grep -i "core 0\|^cpu\|tctl\|tdie\|package id" | grep -oP '\+\K[0-9.]+' | head -1)
-        cpu_temp=${cpu_temp:-0}
+        # Try sensors -u (raw values)
+        local sensors_raw=$(sensors -u 2>/dev/null)
+        if [ -n "$sensors_raw" ]; then
+            cpu_temp=$(echo "$sensors_raw" | grep -i "temp1_input\|core.*_input\|package.*_input" | grep -oP ':\s*\K[0-9.]+' | head -1)
+            cpu_temp=${cpu_temp:-0}
+        fi
         
-        # Try to find GPU temperature from sensors (fallback)
-        if [ "$gpu_temp" = "0" ]; then
-            gpu_temp=$(echo "$sensors_output" | grep -i "gpu\|radeon\|nvidia\|edge" | grep -oP '\+\K[0-9.]+' | head -1)
-            gpu_temp=${gpu_temp:-0}
+        # Fallback to regular sensors output
+        if [ "$cpu_temp" = "0" ]; then
+            local sensors_output=$(sensors 2>/dev/null)
+            cpu_temp=$(echo "$sensors_output" | grep -iE "core 0|^cpu|tctl|tdie|package id|tccd1" | grep -oP '\+\K[0-9.]+' | head -1)
+            cpu_temp=${cpu_temp:-0}
+            
+            # Try to find GPU temperature from sensors
+            if [ "$gpu_temp" = "0" ]; then
+                gpu_temp=$(echo "$sensors_output" | grep -iE "gpu|radeon|nvidia|edge|junction" | grep -oP '\+\K[0-9.]+' | head -1)
+                gpu_temp=${gpu_temp:-0}
+            fi
         fi
     fi
     
     # METHOD 3: /sys/class/hwmon detection
     if [ "$cpu_temp" = "0" ] || [ "$gpu_temp" = "0" ]; then
-        for hwmon in "$SYS_PATH"/class/hwmon/hwmon*/temp*_input; do
-            if [ -f "$hwmon" ]; then
-                local temp_millidegrees=$(cat "$hwmon" 2>/dev/null || echo "0")
-                if [ "$temp_millidegrees" != "0" ]; then
-                    local temp=$(awk "BEGIN {printf \"%.1f\", $temp_millidegrees / 1000}")
-                    
-                    # Try to determine if CPU or GPU based on hwmon name
-                    local hwmon_name=$(cat "$(dirname "$hwmon")/name" 2>/dev/null || echo "")
-                    
-                    if [[ "$hwmon_name" =~ coretemp|k10temp|cpu|zenpower ]] && [ "$cpu_temp" = "0" ]; then
-                        cpu_temp=$temp
-                    elif [[ "$hwmon_name" =~ amdgpu|radeon|nouveau|nvidia ]] && [ "$gpu_temp" = "0" ]; then
-                        gpu_temp=$temp
-                    elif [ "$cpu_temp" = "0" ]; then
-                        # If we can't determine type, assume first temp is CPU
-                        cpu_temp=$temp
+        for hwmon_dir in "$SYS_PATH"/class/hwmon/hwmon*; do
+            if [ -d "$hwmon_dir" ]; then
+                local hwmon_name=$(cat "$hwmon_dir/name" 2>/dev/null || echo "")
+                
+                for temp_input in "$hwmon_dir"/temp*_input; do
+                    if [ -f "$temp_input" ]; then
+                        local temp_millidegrees=$(cat "$temp_input" 2>/dev/null || echo "0")
+                        if [ "$temp_millidegrees" != "0" ] && [ "$temp_millidegrees" -gt 0 ]; then
+                            local temp=$(awk "BEGIN {printf \"%.1f\", $temp_millidegrees / 1000}")
+                            
+                            # Check temperature label
+                            local temp_label_file="${temp_input%_input}_label"
+                            local temp_label=""
+                            if [ -f "$temp_label_file" ]; then
+                                temp_label=$(cat "$temp_label_file" 2>/dev/null || echo "")
+                            fi
+                            
+                            # Determine if CPU or GPU
+                            if [[ "$hwmon_name" =~ coretemp|k10temp|cpu|zenpower|tctl|tdie ]] && [ "$cpu_temp" = "0" ]; then
+                                cpu_temp=$temp
+                                break
+                            elif [[ "$hwmon_name" =~ gpu|radeon|nvidia|amdgpu ]] && [ "$gpu_temp" = "0" ]; then
+                                gpu_temp=$temp
+                            fi
+                        fi
+                    fi
+                done
+            fi
+        done
+    fi
+    
+    # METHOD 4: Thermal zones
+    if [ -d "$SYS_PATH/class/thermal" ] && [ "$cpu_temp" = "0" ]; then
+        for zone_dir in "$SYS_PATH"/class/thermal/thermal_zone*; do
+            if [ -d "$zone_dir" ]; then
+                local zone_type=$(cat "$zone_dir/type" 2>/dev/null || echo "")
+                local zone_temp_file="$zone_dir/temp"
+                
+                if [ -f "$zone_temp_file" ]; then
+                    local temp_millidegrees=$(cat "$zone_temp_file" 2>/dev/null || echo "0")
+                    if [ "$temp_millidegrees" != "0" ] && [ "$temp_millidegrees" -gt 0 ]; then
+                        local temp=$(awk "BEGIN {printf \"%.1f\", $temp_millidegrees / 1000}")
+                        
+                        # Prefer CPU-specific thermal zones
+                        if [[ "$zone_type" =~ x86_pkg_temp|acpitz|cpu|processor ]] && [ "$cpu_temp" = "0" ]; then
+                            cpu_temp=$temp
+                            break
+                        fi
                     fi
                 fi
             fi
         done
     fi
     
-    # METHOD 4: Thermal zones (expanded to check multiple zones)
-    if [ -d "$SYS_PATH/class/thermal" ] && [ "$cpu_temp" = "0" ]; then
-        for zone in "$SYS_PATH"/class/thermal/thermal_zone*/temp; do
-            if [ -f "$zone" ]; then
-                local temp_millidegrees=$(cat "$zone" 2>/dev/null || echo "0")
+    # METHOD 5: Specific vendor paths
+    if [ "$cpu_temp" = "0" ]; then
+        # Intel coretemp path
+        for intel_temp in "$SYS_PATH"/devices/platform/coretemp.*/hwmon/hwmon*/temp1_input; do
+            if [ -f "$intel_temp" ]; then
+                local temp_millidegrees=$(cat "$intel_temp" 2>/dev/null || echo "0")
                 if [ "$temp_millidegrees" != "0" ]; then
                     cpu_temp=$(awk "BEGIN {printf \"%.1f\", $temp_millidegrees / 1000}")
                     break
                 fi
             fi
         done
+        
+        # AMD k10temp path
+        if [ "$cpu_temp" = "0" ]; then
+            for amd_temp in "$SYS_PATH"/devices/platform/k10temp.*/hwmon/hwmon*/temp1_input; do
+                if [ -f "$amd_temp" ]; then
+                    local temp_millidegrees=$(cat "$amd_temp" 2>/dev/null || echo "0")
+                    if [ "$temp_millidegrees" != "0" ]; then
+                        cpu_temp=$(awk "BEGIN {printf \"%.1f\", $temp_millidegrees / 1000}")
+                        break
+                    fi
+                fi
+            done
+        fi
+        
+        # AMD zenpower path
+        if [ "$cpu_temp" = "0" ]; then
+            for zen_temp in "$SYS_PATH"/devices/platform/zenpower.*/hwmon/hwmon*/temp1_input; do
+                if [ -f "$zen_temp" ]; then
+                    local temp_millidegrees=$(cat "$zen_temp" 2>/dev/null || echo "0")
+                    if [ "$temp_millidegrees" != "0" ]; then
+                        cpu_temp=$(awk "BEGIN {printf \"%.1f\", $temp_millidegrees / 1000}")
+                        break
+                    fi
+                fi
+            done
+        fi
     fi
     
     # ========================================
@@ -198,15 +302,38 @@ get_temperature_stats() {
             cpu_temp=${cpu_temp:-0}
         fi
         
-        # METHOD 2: sysctl temperature sensors
-        if [ "$cpu_temp" = "0" ]; then
-            cpu_temp=$(sysctl -a 2>/dev/null | grep -i "temperature" | grep -oP '[0-9.]+' | head -1)
+        # METHOD 2: istats
+        if [ "$cpu_temp" = "0" ] && command -v istats &> /dev/null; then
+            cpu_temp=$(istats cpu temp --value-only 2>/dev/null | grep -oP '[0-9.]+' | head -1)
             cpu_temp=${cpu_temp:-0}
         fi
         
-        # METHOD 3: ioreg I/O Registry
+        # METHOD 3: sysctl temperature sensors
+        if [ "$cpu_temp" = "0" ]; then
+            for key in "machdep.xcpm.cpu_thermal_level" "hw.temperature" "hw.sensors.temp"; do
+                local sysctl_temp=$(sysctl -n "$key" 2>/dev/null | grep -oP '[0-9.]+' | head -1)
+                if [ -n "$sysctl_temp" ] && [ "$sysctl_temp" != "0" ]; then
+                    cpu_temp=$sysctl_temp
+                    break
+                fi
+            done
+        fi
+        
+        # METHOD 4: powermetrics
+        if [ "$cpu_temp" = "0" ] && command -v powermetrics &> /dev/null; then
+            cpu_temp=$(powermetrics --samplers smc -i1 -n1 2>/dev/null | grep -i "CPU die temperature" | grep -oP '[0-9.]+' | head -1)
+            cpu_temp=${cpu_temp:-0}
+        fi
+        
+        # METHOD 5: ioreg I/O Registry
         if [ "$cpu_temp" = "0" ] && command -v ioreg &> /dev/null; then
-            cpu_temp=$(ioreg -l 2>/dev/null | grep -i "temperature" | grep -oP '[0-9.]+' | head -1)
+            cpu_temp=$(ioreg -l 2>/dev/null | grep -E "temperature|temp" | grep -oP '[0-9.]+' | head -1)
+            cpu_temp=${cpu_temp:-0}
+        fi
+        
+        # METHOD 6: smckit
+        if [ "$cpu_temp" = "0" ] && command -v smckit &> /dev/null; then
+            cpu_temp=$(smckit -r 2>/dev/null | grep -i "cpu" | grep -oP '[0-9.]+' | head -1)
             cpu_temp=${cpu_temp:-0}
         fi
         
