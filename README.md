@@ -1,481 +1,542 @@
-# Hybrid System Monitoring Platform - Stage 4 Complete ✅
+# 🚀 System Monitor - Professional Observability Dashboard
 
-A comprehensive cross-platform system monitoring solution with native collectors (Bash/PowerShell), real-time terminal dashboard, and web-based monitoring with RESTful API.
+![System Monitor](https://img.shields.io/badge/Status-Production%20Ready-success)
+![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
+![Python](https://img.shields.io/badge/Backend-Python%20%7C%20FastAPI-yellow)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%2B%20WSL2%20%2B%20Linux-lightgrey)
 
-## 🐳 Deployment Options
+A production-grade, real-time observability platform designed for **Hybrid Environments** (Windows Host + WSL2/Linux Guest). Combines native hardware access with a modern, containerized web dashboard for comprehensive system monitoring.
 
-### Two-Tier Architecture (Production) ✅
-**Best for**: Production, full hardware monitoring  
-**Port**: 5000  
-**Quick Start**: `bash start-system-monitor.sh`  
-📖 [Full Guide](QUICKSTART.md)
+---
 
-### FC Mode (Development) 🧪  
-**Best for**: Testing, demos, learning  
-**Port**: 5100  
-**Quick Start**: `cd Docker && docker-compose -f docker-compose.fc.yml up -d`  
-📖 [FC Guide](Docker/FC_QUICKSTART.md)
+## 📖 Table of Contents
 
-## Features
+- [System Architecture](#-system-architecture)
+- [Quick Start](#-quick-start)
+- [Features](#-features)
+- [Project Structure](#-project-structure)
+- [Detailed Workflow](#-detailed-workflow)
+- [Modules & Components](#-modules--components)
+- [Docker Architecture](#-docker-architecture)
+- [Development Guide](#-development-guide)
+- [API Documentation](#-api-documentation)
+- [Troubleshooting](#-troubleshooting)
 
-### Stage 3 Features (Terminal Dashboard)
-- **🎯 Universal Launcher**: Single entry point for all platforms - automatic OS detection
-- **📊 Live Terminal Dashboard**: Real-time TUI with 2-second refresh using Rich library
-- **Cross-Platform Support**: Native implementations for Unix (Bash) and Windows (PowerShell)
-- **Comprehensive Metrics**: CPU, memory, disk, network, temperature, GPU, fans, SMART disk health
-- **Visual Progress Bars**: Color-coded thresholds (green <60%, yellow 60-80%, red >80%)
-- **Network Interface Details**: Shows top 3 active interfaces with RX/TX stats
-- **Production-Ready**: Error handling, logging, UTF-8 BOM support, graceful degradation
-- **Fully Tested**: 75+ unit tests with 98.7% pass rate
-- **JSON Interchange**: Standardized format between monitors and dashboard
+---
 
-### Stage 4 Features (Web Dashboard) 🆕
-- **🌐 Web Dashboard**: Browser-based monitoring interface with responsive design
-- **🔌 RESTful API**: 7 endpoints for metrics, alerts, and report management
-- **📄 Report Generation**: Automated HTML + Markdown report creation
-- **⚡ Real-time Updates**: Auto-refresh every 3 seconds via JavaScript polling
-- **📱 Mobile Friendly**: Responsive design works on all devices
-- **🎨 Modern UI**: Color-coded panels with progress bars and animations
-- **🚨 Alert Display**: Recent alerts with severity badges
-- **🔒 Network Accessible**: Monitor from any device on your network
+## 🏗️ System Architecture
 
-## Directory Structure
+This project uses a **Two-Tier Hybrid Architecture** to solve the "Container Isolation Problem" - Docker containers cannot easily access host GPU temperatures, CPU voltages, or physical hardware sensors.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    USER'S MACHINE                           │
+│                                                             │
+│  ┌──────────────────────┐      ┌──────────────────────┐   │
+│  │  TIER 1: Native      │      │  TIER 2: Container   │   │
+│  │  Host Agent          │◄────►│  Dashboard           │   │
+│  │                      │      │                      │   │
+│  │  • FastAPI Server    │      │  • Flask Backend     │   │
+│  │  • Port 8888         │      │  • Chart.js UI       │   │
+│  │  • Real Hardware     │      │  • Port 5000         │   │
+│  │    Access            │      │  • Reports & Alerts  │   │
+│  │  • Sensors/WMI       │      │                      │   │
+│  └──────────────────────┘      └──────────────────────┘   │
+│           ▲                              │                 │
+│           │                              │                 │
+│           └──────────────────────────────┘                 │
+│              host.docker.internal                          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Architecture Components
+
+#### Tier 1: Native Host Agent
+- **Purpose**: Direct hardware access for real metrics
+- **Technology**: Python FastAPI + Native OS Tools
+- **Runs On**: Host OS (Windows/Linux/WSL)
+- **Port**: 8888
+- **Capabilities**:
+  - CPU temperature via `lm-sensors` (Linux) or WMI (Windows)
+  - GPU metrics (NVIDIA, AMD, Intel)
+  - Physical disk I/O
+  - Network interface statistics
+  - System voltages and power consumption
+
+#### Tier 2: Dashboard Container
+- **Purpose**: Web UI and data processing
+- **Technology**: Flask + Chart.js + Docker
+- **Runs On**: Docker Container
+- **Port**: 5000
+- **Capabilities**:
+  - Real-time metric visualization
+  - Historical data charts (60-point rolling window)
+  - Alert management with thresholds
+  - PDF/Markdown report generation
+  - Dual-view comparison (Windows vs WSL2)
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
+- **Docker Desktop** (Running) - [Download](https://www.docker.com/products/docker-desktop)
+- **Git Bash** (Windows) or Terminal (Linux/Mac)
+
+### Installation (One Command)
+
+```bash
+# Download and run the universal startup script
+curl -O https://raw.githubusercontent.com/Sharawey74/system-monitor-project/main/start-universal.sh
+bash start-universal.sh
+```
+
+**That's it!** The script will:
+- ✔ Auto-install dependencies (git, curl, sensors, etc.)
+- ✔ Generate Docker configuration automatically
+- ✔ Clone native sensor agents from GitHub
+- ✔ Pull the dashboard image from Docker Hub
+- ✔ Start both tiers and verify connectivity
+- ✔ Open the dashboard at `http://localhost:5000`
+
+### Manual Installation (For Developers)
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Sharawey74/system-monitor-project.git
+cd system-monitor-project
+
+# 2. Run the universal script
+bash start-universal.sh
+```
+
+---
+
+## ✨ Features
+
+### Real-Time Monitoring
+- **CPU**: Usage %, temperature, load averages, core count
+- **Memory**: Usage %, available/total GB, swap
+- **Disk**: Per-partition usage, I/O rates, SMART health
+- **Network**: RX/TX rates per interface, total throughput
+- **GPU**: Temperature, utilization, memory usage (NVIDIA/AMD/Intel)
+
+### Visualization
+- **Task Manager-Style Charts**: 4 real-time charts with smooth animations
+- **Dual-View Mode**: Side-by-side Windows vs WSL2 comparison
+- **Status Chips**: Live online/offline indicators
+- **Notification Drawer**: Collapsible alert center
+
+### Intelligence
+- **Smart Alerts**: Threshold-based monitoring (CPU >90%, Memory >85%, etc.)
+- **Auto-Refresh**: Configurable polling (default: 2s)
+- **Instant Refresh**: On-demand metric collection button
+
+### Reporting
+- **Professional Reports**: PDF and Markdown formats
+- **Dual-Stack Reports**: Separate sections for Host and Guest
+- **Printable**: Clean, light-themed layouts
+
+---
+
+## 📂 Project Structure
 
 ```
 system-monitor-project/
-├── universal.py                     # 🚀 Universal launcher (OS detection + routing)
-├── dashboard_tui.py                 # 📊 Terminal dashboard entry point
-├── dashboard_web.py                 # 🌐 Web dashboard entry point (Stage 4)
-├── requirements.txt                 # Python dependencies
-├── core/
-│   ├── metrics_collector.py         # JSON parser (420 lines)
-│   └── alert_manager.py             # Alert CRUD operations (280 lines)
-├── display/
-│   └── tui_dashboard.py             # Rich TUI dashboard (500+ lines)
-├── web/
-│   ├── dashboard.py                 # Flask web app (220 lines)
-│   └── report_generator.py          # Report generation (150 lines)
-├── templates/
-│   ├── index.html                   # Web dashboard HTML
-│   └── report_template.html         # Report HTML template
-├── static/
-│   ├── styles.css                   # Dashboard CSS
-│   └── script.js                    # Dashboard JavaScript
-├── scripts/
-│   ├── main_monitor.sh              # Unix orchestrator
-│   ├── install.sh                   # Installation script
-│   └── monitors/unix/               # 8 Unix collectors (Bash)
-├── windows/                         # 🆕 All Windows PowerShell Scripts
+│
+├── 🔧 Host/                        # Tier 1: Native Agent
+│   ├── api/
+│   │   ├── server.py               # FastAPI server (Port 8888)
+│   │   └── routes.py               # API endpoints
 │   ├── scripts/
-│   │   └── main_monitor.ps1         # Windows orchestrator
-│   ├── monitors/                    # 8 Windows collectors (PowerShell)
-│   ├── utils/                       # Utility scripts (JSON, logging)
-│   └── tests/                       # 12 PowerShell test files
-├── data/
-│   ├── metrics/
-│   │   └── current.json             # Metrics output (generated by monitors)
-│   ├── alerts/
-│   │   └── alerts.json              # Alerts data
-│   └── logs/
-│       ├── system.log               # Monitor logs
-│       └── dashboard.log            # Dashboard logs
-├── reports/                         # 🆕 Generated Reports (Stage 4)
-│   ├── html/                        # HTML reports
-│   └── markdown/                    # Markdown reports
-└── tests/
-    ├── python/                      # 6 Python test files (75 tests)
-    ├── docker/                      # 🆕 Docker test suite
-    │   ├── test_docker_metrics.py   # Container metrics testing
-    │   ├── test_bash_validation.py  # Bash script validation
-    │   └── conftest.py              # Pytest configuration
-    └── unix/                        # Unix test suite (9 tests + runner)
+│   │   ├── main_monitor.sh         # Master collection script
+│   │   ├── cpu_monitor.sh          # CPU metrics
+│   │   ├── memory_monitor.sh       # Memory metrics
+│   │   ├── disk_monitor.sh         # Disk metrics
+│   │   ├── network_monitor.sh      # Network metrics
+│   │   ├── gpu_monitor.sh          # GPU metrics (NVIDIA/AMD/Intel)
+│   │   └── temperature_monitor.sh  # Temperature sensors
+│   └── output/
+│       └── latest.json             # Current metrics snapshot
+│
+├── 🔧 Host2/                       # Alternative Go Agent (Optional)
+│   ├── main.go                     # High-performance Go implementation
+│   └── collectors/                 # Metric collectors
+│
+├── 🌐 web/                         # Tier 2: Dashboard Backend
+│   ├── app.py                      # Flask application entry
+│   ├── routes.py                   # API routes
+│   ├── json_logger.py              # Background metrics logger
+│   └── services/
+│       ├── report_generator.py     # PDF/MD report engine
+│       └── metrics_service.py      # Data aggregation
+│
+├── 🎨 static/                      # Frontend Assets
+│   ├── css/
+│   │   └── styles.css              # Glassmorphism dark theme
+│   └── js/
+│       └── dashboard.js            # Chart.js + Update logic
+│
+├── 📄 templates/                   # HTML Templates
+│   ├── dashboard.html              # Main UI
+│   ├── report_template.html        # HTML report
+│   └── report_template.md          # Markdown report
+│
+├── 🛠️ core/                        # Shared Utilities
+│   ├── config.py                   # Configuration management
+│   └── logger.py                   # Logging utilities
+│
+├── 📜 scripts/                     # Helper Scripts
+│   ├── install_deps.sh             # Dependency installer
+│   └── verify_setup.sh             # Environment validator
+│
+├── 🐳 Docker Files
+│   ├── Dockerfile                  # Container definition
+│   ├── docker-compose.yml          # Multi-service orchestration
+│   └── docker-entrypoint.sh        # Container startup script
+│
+├── 🚀 Orchestration Scripts
+│   ├── start-universal.sh          # ⭐ ONE-CLICK STARTUP
+│   ├── start-host-api.sh           # Start Tier 1 only
+│   ├── start-system-monitor.sh     # Start both tiers
+│   ├── stop-host-api.sh            # Stop Tier 1
+│   └── stop-system-monitor.sh      # Stop both tiers
+│
+├── 📊 Entry Points
+│   ├── dashboard_web.py            # Web dashboard launcher
+│   └── dashboard_tui.py            # Terminal UI launcher
+│
+└── 📋 Configuration
+    ├── requirements.txt            # Python dependencies
+    └── .gitignore                  # Git exclusions
 ```
 
-## Stage 3: Terminal Dashboard Features
+---
 
-### Real-Time Visualization
+## 🔄 Detailed Workflow
 
-- **2-Second Refresh**: Live updates without flickering
-- **6-Panel Layout**: Header + CPU/Memory + Temperature/Network + Disk + Alerts footer
-- **Color Coding**: 
-  - 🟢 Green: < 60% usage
-  - 🟡 Yellow: 60-80% usage
-  - 🔴 Red: > 80% usage
+### Startup Sequence
 
-### Metrics Displayed
-
-1. **CPU Panel**: Usage %, load average (1/5/15 min), cores, model
-2. **Memory Panel**: Used/Total GB, usage % with bar, free memory
-3. **Temperature Panel**: CPU & GPU temperatures with vendor (Intel/AMD/NVIDIA)
-4. **Disk Panel**: All drives with usage %, used/total GB, progress bars
-5. **Network Panel**: Total RX/TX + top 3 interfaces with individual traffic
-6. **Alerts Panel**: Color-coded notifications (info/warning/critical)
-
-### Technical Highlights
-
-- **UTF-8 BOM Handling**: Properly reads PowerShell-generated JSON files
-- **Graceful Degradation**: Shows "N/A" for unavailable metrics
-- **No Data Duplication**: Reads existing JSON, doesn't re-collect
-- **Cross-Platform**: Works on Windows, Linux, macOS, WSL2
-
-## Installation
-
-### Python Requirements
-
-**Stage 3 (Terminal Dashboard):**
-```bash
-pip install rich>=13.0.0
+```mermaid
+graph TD
+    A[User runs start-universal.sh] --> B{Dependencies OK?}
+    B -->|No| C[Auto-install git, curl, sensors, etc.]
+    B -->|Yes| D{docker-compose.yml exists?}
+    C --> D
+    D -->|No| E[Generate docker-compose.yml]
+    D -->|Yes| F{Host API scripts exist?}
+    E --> F
+    F -->|No| G[Clone from GitHub]
+    F -->|Yes| H[Start Host API on Port 8888]
+    G --> H
+    H --> I[Wait for API health check]
+    I --> J[Pull/Build Dashboard Container]
+    J --> K[Start Dashboard on Port 5000]
+    K --> L[Verify both tiers]
+    L --> M[Display URLs and status]
 ```
 
-**Stage 4 (Web Dashboard):**
-```bash
-pip install Flask>=3.0.0 Jinja2>=3.1.0
+### Data Flow
 
-# Or install everything
+1. **Collection** (Every 60s by default):
+   - `Host/scripts/main_monitor.sh` runs all collectors
+   - Each script outputs JSON to `Host/output/latest.json`
+   - Host API (`server.py`) serves this file via REST
+
+2. **Polling** (Every 2s):
+   - Dashboard JS calls `/api/metrics/dual`
+   - Flask backend fetches from both:
+     - `http://localhost:8888/metrics` (Windows)
+     - `http://localhost:8889/metrics` (Native Go Agent, if enabled)
+   - Returns merged JSON to frontend
+
+3. **Rendering**:
+   - `dashboard.js` updates DOM elements
+   - Chart.js updates 4 real-time charts
+   - AlertManager checks thresholds
+   - Notification drawer updates
+
+---
+
+## 🧩 Modules & Components
+
+### Backend Modules
+
+#### `web/app.py`
+- Flask application factory
+- CORS configuration
+- Route registration
+- Health check endpoint
+
+#### `web/routes.py`
+- `/api/metrics/dual` - Fetch Windows + WSL metrics
+- `/api/reports/generate` - Create PDF/MD reports
+- `/api/refresh` - Trigger instant metric collection
+- `/api/health` - Container health status
+
+#### `web/services/report_generator.py`
+- Template rendering (Jinja2)
+- PDF generation (WeasyPrint)
+- Markdown formatting
+- Dual-stack report layout
+
+### Frontend Modules
+
+#### `static/js/dashboard.js`
+- **Data Fetching**: `fetchData()` polls `/api/metrics/dual`
+- **Rendering**: `updateObservabilityGrid()` updates UI
+- **Charts**: Chart.js initialization and updates
+- **Alerts**: `AlertManager` class for threshold monitoring
+- **Network Rates**: Calculates RX/TX rates from cumulative bytes
+
+#### `static/css/styles.css`
+- CSS Variables for theming
+- Glassmorphism effects
+- Responsive grid layouts
+- Chart animations
+- Notification drawer styles
+
+### Native Agent Modules
+
+#### `Host/scripts/main_monitor.sh`
+- Orchestrates all collectors
+- Merges JSON outputs
+- Writes to `latest.json`
+- Handles errors gracefully
+
+#### Individual Collectors
+- **CPU**: `mpstat`, `/proc/stat`, `wmic cpu`
+- **Memory**: `free`, `vmstat`, `wmic memorychip`
+- **Disk**: `df`, `iostat`, `wmic logicaldisk`
+- **Network**: `ip`, `ifconfig`, `netstat`
+- **GPU**: `nvidia-smi`, `radeontop`, `intel_gpu_top`
+- **Temp**: `sensors`, `nvidia-smi`, WMI queries
+
+---
+
+## 🐳 Docker Architecture
+
+### Container Configuration
+
+```yaml
+services:
+  dashboard:
+    image: sharawey74/system-monitor:latest
+    container_name: system-monitor-dashboard
+    
+    # Network bridge to host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    
+    # Expose web UI
+    ports:
+      - "5000:5000"
+    
+    # Persistent data
+    volumes:
+      - ./data:/app/data
+      - ./reports:/app/reports
+    
+    # Environment
+    environment:
+      - HOST_API_URL=http://host.docker.internal:8888
+      - NATIVE_AGENT_URL=http://host.docker.internal:8889
+```
+
+### Why Not Fully Containerized?
+
+**Problem**: Docker containers are isolated from host hardware.
+- Cannot read GPU temperatures
+- Cannot access `/sys/class/hwmon`
+- Cannot query WMI on Windows
+
+**Solution**: Hybrid architecture
+- Native agent runs on host with full hardware access
+- Dashboard runs in container for portability
+- Communication via `host.docker.internal` bridge
+
+---
+
+## 💻 Development Guide
+
+### Local Development
+
+```bash
+# 1. Clone and enter directory
+git clone https://github.com/Sharawey74/system-monitor-project.git
+cd system-monitor-project
+
+# 2. Install Python dependencies
 pip install -r requirements.txt
+
+# 3. Start Host API (Terminal 1)
+cd Host/api
+python3 server.py
+
+# 4. Start Dashboard (Terminal 2)
+python3 dashboard_web.py --debug
+
+# 5. Access at http://localhost:5000
 ```
 
-### Windows (PowerShell)
-
-```powershell
-cd c:\Users\DELL\Desktop\wso\system-monitor-project
-# No installation needed - PowerShell scripts run directly
-```
-
-### Unix (Linux/macOS)
+### Building Docker Image
 
 ```bash
-cd /path/to/system-monitor-project
-bash scripts/install.sh
+# Build locally
+docker build -t system-monitor:latest .
+
+# Test the build
+docker run -p 5000:5000 \
+  --add-host=host.docker.internal:host-gateway \
+  system-monitor:latest
 ```
 
-The install script will:
-- Create required directories
-- Set executable permissions
-- Check for optional tools (sensors, smartctl, jq)
-
-## Quick Start
-
-### Universal Launcher (Recommended - All Platforms)
+### Pushing to Docker Hub
 
 ```bash
-# Run monitors + launch dashboard
-python universal.py --dashboard
+# 1. Login
+docker login
 
-# Run monitors only (one-time)
-python universal.py
+# 2. Tag with your username
+docker tag system-monitor:latest yourusername/system-monitor:latest
 
-# Continuous monitoring (30-second interval)
-python universal.py --watch --interval 30
-
-# View live dashboard (if monitors already running)
-python dashboard_tui.py
+# 3. Push
+docker push yourusername/system-monitor:latest
 ```
 
-**Workflow:**
-1. `universal.py` detects your OS (Windows/Linux/macOS)
-2. Automatically runs appropriate monitoring scripts (PowerShell or Bash)
-3. Generates `data/metrics/current.json`
-4. Launches dashboard to visualize metrics in real-time
+---
 
-### Stage 4: Web Dashboard Usage 🆕
+## 📡 API Documentation
 
-```bash
-# Start web dashboard
-python dashboard_web.py
+### Host API (Port 8888)
 
-# Custom port
-python dashboard_web.py --port 8080
+#### `GET /metrics`
+Returns current system metrics.
 
-# Network accessible (all interfaces)
-python dashboard_web.py --host 0.0.0.0
-
-# With debug mode
-python dashboard_web.py --debug
-```
-
-**Access the dashboard:**
-- Web UI: http://localhost:5000
-- API Metrics: http://localhost:5000/api/metrics
-- API Alerts: http://localhost:5000/api/alerts
-- API Reports: http://localhost:5000/api/reports
-
-**Generate reports:**
-- Click "Generate Report" button in web UI
-- Or via API: `POST http://localhost:5000/api/reports/generate`
-- Reports saved to `reports/html/` and `reports/markdown/`
-
-### Python Dependencies
-
-```bash
-pip install -r requirements.txt
-```
-
-Required packages:
-- `rich>=13.0.0` - Terminal UI rendering (Stage 3)
-- `Flask>=3.0.0` - Web framework (Stage 4)
-- `Jinja2>=3.1.0` - Template engine (Stage 4)
-- `pytest>=7.0.0` - Testing framework (dev)
-
-## Platform-Specific Usage
-
-### Windows
-
-Run the monitoring system:
-```powershell
-.\scripts\main_monitor.ps1
-```
-
-View results:
-```powershell
-Get-Content data\metrics\current.json
-```
-
-Run tests:
-```powershell
-.\tests\windows\Run-AllTests.ps1
-```
-
-### Unix (Linux/macOS)
-
-Run the monitoring system:
-```bash
-bash scripts/main_monitor.sh
-```
-
-View results:
-```bash
-cat data/metrics/current.json
-```
-
-Run tests:
-```bash
-bash tests/unix/run_all_tests.sh
-```
-
-## Collectors
-
-### Core Collectors (Available on all platforms)
-
-1. **CPU Monitor**: Usage percentage and load averages
-2. **Memory Monitor**: Total, used, free, and available memory
-3. **Disk Monitor**: Usage statistics for all mounted drives
-4. **Network Monitor**: RX/TX bytes for all network interfaces
-5. **System Monitor**: OS info, hostname, uptime, kernel version
-
-### Optional Collectors (May return "unavailable" or "restricted")
-
-6. **Temperature Monitor**: CPU/GPU temperatures (requires sensors on Unix, WMI on Windows)
-7. **Fan Monitor**: Fan speeds (requires sensors on Unix, WMI on Windows)
-8. **SMART Monitor**: Disk health data (requires smartctl/admin privileges)
-
-## JSON Output Format
-
+**Response**:
 ```json
 {
-  "timestamp": "2025-12-02T15:20:00Z",
-  "system": {
-    "os": "Windows 10 Pro",
-    "hostname": "DESKTOP-ABC123",
-    "uptime_seconds": 123456,
-    "kernel": "10.0.19045"
-  },
   "cpu": {
-    "usage_percent": 25.3,
-    "load_1": 0.15,
-    "load_5": 0.12,
-    "load_15": 0.10
+    "usage_percent": 45.2,
+    "model": "Intel Core i7-9700K",
+    "logical_processors": 8,
+    "temperature_celsius": 62
   },
   "memory": {
+    "usage_percent": 68.5,
     "total_mb": 16384,
-    "used_mb": 8192,
-    "free_mb": 8192,
-    "available_mb": 8192
+    "used_mb": 11223
   },
-  "disk": [
-    {
-      "device": "C:",
-      "filesystem": "NTFS",
-      "total_gb": 256.00,
-      "used_gb": 120.50,
-      "used_percent": 47.1
-    }
-  ],
-  "network": [
-    {
-      "iface": "Ethernet",
-      "rx_bytes": 1234567890,
-      "tx_bytes": 987654321
-    }
-  ],
-  "temperature": {
-    "status": "unavailable"
-  },
-  "fans": {
-    "status": "unavailable"
-  },
-  "smart": {
-    "status": "restricted"
-  }
+  "disk": [...],
+  "network": [...],
+  "gpu": {...}
 }
 ```
 
-## Error Handling
+#### `GET /health`
+Health check endpoint.
 
-All collectors handle errors gracefully:
+**Response**: `{"status": "healthy"}`
 
-- **Missing Tools**: Returns `"status": "unavailable"` if required tools aren't installed
-- **Permission Issues**: Returns `"status": "restricted"` if elevated privileges are needed
-- **Execution Errors**: Returns `"status": "error"` with error message
-- **Exit Codes**: 0 for success, non-zero for failure
+### Dashboard API (Port 5000)
 
-## Testing
+#### `GET /api/metrics/dual`
+Fetches metrics from both Windows and WSL2.
 
-### Windows Tests
-
-Each PowerShell test validates:
-- Script executes successfully
-- Output is valid JSON
-- Required fields are present
-
-Run individual test:
-```powershell
-.\tests\windows\Test-CpuMonitor.ps1
+**Response**:
+```json
+{
+  "success": true,
+  "native": {...},  // Windows metrics
+  "legacy": {...}   // WSL2 metrics
+}
 ```
 
-Run all tests:
-```powershell
-.\tests\windows\Run-AllTests.ps1
+#### `POST /api/reports/generate`
+Generates a system report.
+
+**Body**:
+```json
+{
+  "format": "pdf",  // or "markdown"
+  "filename": "system_report_2024"
+}
 ```
 
-### Unix Tests
+#### `POST /api/refresh`
+Triggers instant metric collection.
 
-Each Bash test validates:
-- Exit code is 0
-- Output is valid JSON (using jq or python if available)
-- Required fields exist
+---
 
-Run individual test:
+## 🔧 Troubleshooting
+
+### Dashboard shows "Offline"
 ```bash
-bash tests/unix/test_cpu_monitor.sh
+# Check if Host API is running
+curl http://localhost:8888/health
+
+# If not, start it
+cd Host/api
+python3 server.py
 ```
 
-Run all tests:
+### Docker build fails with "500 Internal Server Error"
 ```bash
-bash tests/unix/run_all_tests.sh
+# Docker Hub authentication issue
+docker logout
+docker pull ubuntu:22.04
 ```
 
-## Logging
+### Charts not updating
+- Check browser console for errors
+- Verify `/api/metrics/dual` returns data
+- Check CORS settings in `web/app.py`
 
-All operations are logged to `data/logs/system.log` with timestamps:
+### Missing GPU metrics
+- **NVIDIA**: Install `nvidia-smi`
+- **AMD**: Install `radeontop`
+- **Intel**: Install `intel-gpu-tools`
 
-```
-[2025-12-02T15:20:00Z] [INFO] Starting system monitoring collection
-[2025-12-02T15:20:01Z] [INFO] Running cpu_monitor.ps1
-[2025-12-02T15:20:01Z] [INFO] cpu_monitor.ps1 completed successfully
-...
-```
+---
 
-## Optional Dependencies
+## 💡 The "Big Idea"
 
-### Unix/Linux
+Most monitoring solutions fall into two extremes:
 
-- **jq**: JSON processor (for test validation)
-- **lm-sensors**: Temperature and fan monitoring
-- **smartmontools**: Disk health monitoring
-- **sysstat**: Enhanced CPU statistics
+**Too Simple**: Task Manager doesn't show history, trends, or alerts.
 
-Install on Ubuntu/Debian:
-```bash
-sudo apt-get install jq lm-sensors smartmontools sysstat
-```
+**Too Complex**: Prometheus + Grafana takes hours to configure, requires learning PromQL, and needs constant maintenance.
 
-Install on macOS:
-```bash
-brew install jq smartmontools sysstat
-```
+**System Monitor** bridges this gap:
+- ✅ **Zero Config**: One script, one command
+- ✅ **Deep Data**: Real hardware temps/volts unlike standard Docker tools
+- ✅ **Beautiful**: Modern, dark-themed, responsive UI
+- ✅ **Data Ownership**: Everything runs locally, no cloud dependencies
+- ✅ **Production Ready**: Used in real environments for 24/7 monitoring
 
-### Windows
+---
 
-- **PowerShell 5.1+**: Included with Windows 10/11
-- **WMI**: Built-in (for temperature/fan monitoring)
-- **Admin privileges**: Optional (for SMART data)
+## 📄 License
 
-## Troubleshooting
+MIT License - See LICENSE file for details
 
-### "Permission Denied" errors on Unix
+---
 
-Make scripts executable:
-```bash
-chmod +x scripts/*.sh scripts/monitors/unix/*.sh tests/unix/*.sh
-```
+## 👤 Author
 
-Or run the install script:
-```bash
-bash scripts/install.sh
-```
+**Sharawey74**
+- GitHub: [@Sharawey74](https://github.com/Sharawey74)
+- Docker Hub: [sharawey74/system-monitor](https://hub.docker.com/r/sharawey74/system-monitor)
 
-### Temperature/Fan data shows "unavailable"
+---
 
-- **Unix**: Install lm-sensors: `sudo apt-get install lm-sensors && sudo sensors-detect`
-- **Windows**: Some systems don't expose WMI thermal data - this is normal
+## 🙏 Acknowledgments
 
-### SMART data shows "restricted"
+- Chart.js for beautiful visualizations
+- FastAPI for blazing-fast APIs
+- Docker for containerization
+- The open-source community
 
-- **Unix**: Run with sudo or add user to disk group
-- **Windows**: Run PowerShell as Administrator
+---
 
-## Documentation
-
-### Stage 3 (Terminal Dashboard)
-- [QUICKSTART_STAGE3.md](docs/QUICKSTART_STAGE3.md) - Quick setup guide
-- [DASHBOARD_README.md](docs/DASHBOARD_README.md) - Complete dashboard guide
-- [STAGE3_SUMMARY.md](docs/STAGE3_SUMMARY.md) - Implementation details
-
-### Stage 4 (Web Dashboard) 🆕
-- [QUICKSTART_STAGE4.md](docs/QUICKSTART_STAGE4.md) - 2-minute setup
-- [STAGE4_COMPLETE.md](docs/STAGE4_COMPLETE.md) - Complete guide
-- [STAGE4_SUMMARY.md](docs/STAGE4_SUMMARY.md) - Implementation summary
-- [STAGE4_FILES.md](docs/STAGE4_FILES.md) - File inventory
-
-### Additional Documentation
-- [BUNDLED_LIBRARIES.md](docs/BUNDLED_LIBRARIES.md) - Hardware monitoring setup
-- [GIT_COMMITS_GUIDE.md](docs/GIT_COMMITS_GUIDE.md) - Commit guidelines
-
-## Project Status
-
-✅ **Stage 1**: Native Monitoring Scripts - COMPLETE  
-✅ **Stage 2**: JSON Data Pipeline - COMPLETE  
-✅ **Stage 3**: Terminal Dashboard (TUI) - COMPLETE (75 tests, 98.7% pass)  
-✅ **Stage 4**: Web Dashboard + Reports - COMPLETE (100% verified)  
-
-**Total:** 2,860+ lines of production code for Stage 4
-
-## Verification
-
-### Stage 3 Verification
-```bash
-python verify_stage3.py
-# Expected: 97.1% success rate
-```
-
-### Stage 4 Verification 🆕
-```bash
-python verify_stage4.py
-# Expected: 100% verification complete (11/11 checks)
-```
-
-## License
-
-This is a student project for educational purposes.
-
-## Future Enhancements
-
-Possible additions beyond Stage 4:
-- Historical data visualization with charts
-- WebSocket for real-time push updates
-- User authentication and multi-user support
-- Multi-host monitoring aggregation
-- Email/webhook alerting
-- Data export (CSV, Excel)
-- Docker containerization
+**⭐ Star this repo if you find it useful!**
