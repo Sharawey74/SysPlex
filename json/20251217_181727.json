@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-12-17T17:43:09Z",
+  "timestamp": "2025-12-17T18:16:43Z",
   "platform": "unix",
   "system": {
     "os": "Ubuntu 24.04.3 LTS",
     "hostname": "DESKTOP-T6GSL92",
-    "uptime_seconds": 2388,
+    "uptime_seconds": 4324,
     "kernel": "6.6.87.2-microsoft-standard-WSL2"
   },
   "cpu": {
-    "usage_percent": 0.25,
-    "load_1": 0.21,
-    "load_5": 0.2,
-    "load_15": 0.09,
+    "usage_percent": 3.81,
+    "load_1": 0.28,
+    "load_5": 0.37,
+    "load_15": 0.25,
     "logical_processors": 8,
     "vendor": "Intel",
     "model": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
@@ -19,10 +19,10 @@
   },
   "memory": {
     "total_mb": 7804,
-    "used_mb": 973,
-    "free_mb": 6388,
-    "available_mb": 6830,
-    "usage_percent": 12.5,
+    "used_mb": 1159,
+    "free_mb": 5002,
+    "available_mb": 6644,
+    "usage_percent": 14.9,
     "status": "ok"
   },
   "disk": [
@@ -44,7 +44,7 @@
       "device": "/usr/lib/wsl/drivers",
       "filesystem": "drivers",
       "total_gb": 475.28,
-      "used_gb": 372.78,
+      "used_gb": 372.53,
       "used_percent": 78.4
     },
     {
@@ -114,7 +114,7 @@
       "device": "/mnt/c",
       "filesystem": "C:\\",
       "total_gb": 475.28,
-      "used_gb": 372.78,
+      "used_gb": 372.53,
       "used_percent": 78.4
     },
     {
@@ -156,13 +156,13 @@
   "network": [
     {
       "iface": "lo",
-      "rx_bytes": 2792234,
-      "tx_bytes": 2792234
+      "rx_bytes": 3023523,
+      "tx_bytes": 3023523
     },
     {
       "iface": "eth0",
-      "rx_bytes": 170733,
-      "tx_bytes": 35923
+      "rx_bytes": 250509,
+      "tx_bytes": 47814
     },
     {
       "iface": "docker0",
@@ -173,7 +173,7 @@
   "temperature": {
     "cpu_celsius": 0,
     "cpu_vendor": "Intel",
-    "gpu_celsius": 55,
+    "gpu_celsius": 60,
     "gpu_vendor": "NVIDIA",
     "status": "ok"
   },
@@ -187,7 +187,7 @@
         "utilization_percent": 0,
         "memory_used_mb": 0,
         "memory_total_mb": 2048,
-        "temperature_celsius": 55,
+        "temperature_celsius": 61,
         "status": "ok"
       },
       {
@@ -236,7 +236,7 @@
       "power_on_hours": 0
     }
   ],
-  "saved_at": "2025-12-17T17:43:25.811477Z",
-  "log_timestamp": "17/12/2025 17:43:25",
+  "saved_at": "2025-12-17T18:17:27.053729Z",
+  "log_timestamp": "17/12/2025 18:17:27",
   "source": "host-api"
 }

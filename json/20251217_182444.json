@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-12-17T17:46:36Z",
+  "timestamp": "2025-12-17T18:24:05Z",
   "platform": "unix",
   "system": {
     "os": "Ubuntu 24.04.3 LTS",
     "hostname": "DESKTOP-T6GSL92",
-    "uptime_seconds": 2586,
+    "uptime_seconds": 4745,
     "kernel": "6.6.87.2-microsoft-standard-WSL2"
   },
   "cpu": {
-    "usage_percent": 0.12,
-    "load_1": 0.03,
-    "load_5": 0.11,
-    "load_15": 0.08,
+    "usage_percent": 1.38,
+    "load_1": 0.13,
+    "load_5": 0.22,
+    "load_15": 0.21,
     "logical_processors": 8,
     "vendor": "Intel",
     "model": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
@@ -19,10 +19,10 @@
   },
   "memory": {
     "total_mb": 7804,
-    "used_mb": 959,
-    "free_mb": 6397,
-    "available_mb": 6844,
-    "usage_percent": 12.3,
+    "used_mb": 1163,
+    "free_mb": 4955,
+    "available_mb": 6640,
+    "usage_percent": 14.9,
     "status": "ok"
   },
   "disk": [
@@ -44,8 +44,8 @@
       "device": "/usr/lib/wsl/drivers",
       "filesystem": "drivers",
       "total_gb": 475.28,
-      "used_gb": 372.78,
-      "used_percent": 78.4
+      "used_gb": 372.9,
+      "used_percent": 78.5
     },
     {
       "device": "/",
@@ -114,8 +114,8 @@
       "device": "/mnt/c",
       "filesystem": "C:\\",
       "total_gb": 475.28,
-      "used_gb": 372.78,
-      "used_percent": 78.4
+      "used_gb": 372.9,
+      "used_percent": 78.5
     },
     {
       "device": "/mnt/d",
@@ -156,13 +156,13 @@
   "network": [
     {
       "iface": "lo",
-      "rx_bytes": 2839606,
-      "tx_bytes": 2839606
+      "rx_bytes": 3051042,
+      "tx_bytes": 3051042
     },
     {
       "iface": "eth0",
-      "rx_bytes": 176841,
-      "tx_bytes": 36931
+      "rx_bytes": 260633,
+      "tx_bytes": 49732
     },
     {
       "iface": "docker0",
@@ -173,7 +173,7 @@
   "temperature": {
     "cpu_celsius": 0,
     "cpu_vendor": "Intel",
-    "gpu_celsius": 55,
+    "gpu_celsius": 58,
     "gpu_vendor": "NVIDIA",
     "status": "ok"
   },
@@ -187,7 +187,7 @@
         "utilization_percent": 0,
         "memory_used_mb": 0,
         "memory_total_mb": 2048,
-        "temperature_celsius": 54,
+        "temperature_celsius": 60,
         "status": "ok"
       },
       {
@@ -236,7 +236,7 @@
       "power_on_hours": 0
     }
   ],
-  "saved_at": "2025-12-17T17:47:35.482354Z",
-  "log_timestamp": "17/12/2025 17:47:35",
+  "saved_at": "2025-12-17T18:24:44.678233Z",
+  "log_timestamp": "17/12/2025 18:24:44",
   "source": "host-api"
 }

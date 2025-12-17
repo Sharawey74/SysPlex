@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-12-17T17:47:44Z",
+  "timestamp": "2025-12-17T18:17:51Z",
   "platform": "unix",
   "system": {
     "os": "Ubuntu 24.04.3 LTS",
     "hostname": "DESKTOP-T6GSL92",
-    "uptime_seconds": 2652,
+    "uptime_seconds": 4390,
     "kernel": "6.6.87.2-microsoft-standard-WSL2"
   },
   "cpu": {
-    "usage_percent": 0.25,
-    "load_1": 0.01,
-    "load_5": 0.08,
-    "load_15": 0.07,
+    "usage_percent": 2.12,
+    "load_1": 0.09,
+    "load_5": 0.3,
+    "load_15": 0.23,
     "logical_processors": 8,
     "vendor": "Intel",
     "model": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
@@ -19,10 +19,10 @@
   },
   "memory": {
     "total_mb": 7804,
-    "used_mb": 960,
-    "free_mb": 6360,
-    "available_mb": 6844,
-    "usage_percent": 12.3,
+    "used_mb": 1147,
+    "free_mb": 5007,
+    "available_mb": 6656,
+    "usage_percent": 14.7,
     "status": "ok"
   },
   "disk": [
@@ -44,7 +44,7 @@
       "device": "/usr/lib/wsl/drivers",
       "filesystem": "drivers",
       "total_gb": 475.28,
-      "used_gb": 372.78,
+      "used_gb": 372.53,
       "used_percent": 78.4
     },
     {
@@ -114,7 +114,7 @@
       "device": "/mnt/c",
       "filesystem": "C:\\",
       "total_gb": 475.28,
-      "used_gb": 372.78,
+      "used_gb": 372.53,
       "used_percent": 78.4
     },
     {
@@ -156,13 +156,13 @@
   "network": [
     {
       "iface": "lo",
-      "rx_bytes": 2862051,
-      "tx_bytes": 2862051
+      "rx_bytes": 3027936,
+      "tx_bytes": 3027936
     },
     {
       "iface": "eth0",
-      "rx_bytes": 180759,
-      "tx_bytes": 37195
+      "rx_bytes": 254469,
+      "tx_bytes": 48120
     },
     {
       "iface": "docker0",
@@ -187,7 +187,7 @@
         "utilization_percent": 0,
         "memory_used_mb": 0,
         "memory_total_mb": 2048,
-        "temperature_celsius": 56,
+        "temperature_celsius": 58,
         "status": "ok"
       },
       {
@@ -236,7 +236,7 @@
       "power_on_hours": 0
     }
   ],
-  "saved_at": "2025-12-17T17:48:38.123789Z",
-  "log_timestamp": "17/12/2025 17:48:38",
+  "saved_at": "2025-12-17T18:18:29.584643Z",
+  "log_timestamp": "17/12/2025 18:18:29",
   "source": "host-api"
 }
