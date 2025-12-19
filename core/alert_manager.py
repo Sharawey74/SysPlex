@@ -9,7 +9,7 @@ import json
 import logging
 from pathlib import Path
 from typing import List, Dict, Any, Optional
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Configure logging
 logging.basicConfig(
@@ -124,7 +124,7 @@ def create_empty_alerts_file(path: str = DEFAULT_ALERTS_PATH) -> bool:
         
         # Create empty alerts structure
         empty_structure = {
-            "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
             "alerts": []
         }
         
@@ -188,7 +188,7 @@ def add_alert(
             "level": level,
             "metric": metric,
             "message": message,
-            "timestamp": datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+            "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         }
         
         if value is not None:
@@ -198,7 +198,7 @@ def add_alert(
         
         # Add to alerts list
         data["alerts"].append(new_alert)
-        data["timestamp"] = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")
+        data["timestamp"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         
         # Write back to file
         with alerts_path.open('w', encoding='utf-8') as f:

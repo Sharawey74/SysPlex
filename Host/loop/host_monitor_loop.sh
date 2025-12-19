@@ -29,7 +29,7 @@ chmod +x "${MAIN_MONITOR}" 2>/dev/null || true
 
 # Counter for logging
 ITERATION=0
-INTERVAL=60  # seconds
+INTERVAL=2  # seconds (matches dashboard refresh rate)
 
 # Trap Ctrl+C for clean exit
 trap 'echo ""; echo "Monitoring stopped by user"; exit 0' SIGINT SIGTERM

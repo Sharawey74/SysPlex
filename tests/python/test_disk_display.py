@@ -26,4 +26,10 @@ for i, disk in enumerate(disks, 1):
 print("\n" + "=" * 60)
 print(f"Memory usage: {metrics.get('memory', {}).get('usage_percent', 'N/A')}%")
 print(f"GPU vendor: {metrics.get('temperature', {}).get('gpu_vendor', 'N/A')}")
-print(f"Network interfaces: {len(metrics.get('network', {}).get('interfaces', []))}")
+
+# Handle network being either a list or dict
+network = metrics.get('network', [])
+if isinstance(network, list):
+    print(f"Network interfaces: {len(network)}")
+else:
+    print(f"Network interfaces: {len(network.get('interfaces', []))}")

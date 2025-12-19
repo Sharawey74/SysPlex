@@ -1,17 +1,17 @@
 {
-  "timestamp": "2025-12-17T18:15:34Z",
+  "timestamp": "2025-12-18T09:56:17Z",
   "platform": "unix",
   "system": {
     "os": "Ubuntu 24.04.3 LTS",
     "hostname": "DESKTOP-T6GSL92",
-    "uptime_seconds": 4258,
+    "uptime_seconds": 4032,
     "kernel": "6.6.87.2-microsoft-standard-WSL2"
   },
   "cpu": {
-    "usage_percent": 1.25,
-    "load_1": 0.59,
-    "load_5": 0.43,
-    "load_15": 0.25,
+    "usage_percent": 0.37,
+    "load_1": 0.12,
+    "load_5": 0.16,
+    "load_15": 0.06,
     "logical_processors": 8,
     "vendor": "Intel",
     "model": "11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz",
@@ -19,10 +19,10 @@
   },
   "memory": {
     "total_mb": 7804,
-    "used_mb": 1136,
-    "free_mb": 5033,
-    "available_mb": 6667,
-    "usage_percent": 14.6,
+    "used_mb": 965,
+    "free_mb": 6391,
+    "available_mb": 6838,
+    "usage_percent": 12.4,
     "status": "ok"
   },
   "disk": [
@@ -44,14 +44,14 @@
       "device": "/usr/lib/wsl/drivers",
       "filesystem": "drivers",
       "total_gb": 475.28,
-      "used_gb": 372.53,
-      "used_percent": 78.4
+      "used_gb": 379.02,
+      "used_percent": 79.7
     },
     {
       "device": "/",
       "filesystem": "/dev/sdd",
       "total_gb": 1006.85,
-      "used_gb": 4.19,
+      "used_gb": 4.21,
       "used_percent": 0.4
     },
     {
@@ -114,8 +114,8 @@
       "device": "/mnt/c",
       "filesystem": "C:\\",
       "total_gb": 475.28,
-      "used_gb": 372.53,
-      "used_percent": 78.4
+      "used_gb": 379.02,
+      "used_percent": 79.7
     },
     {
       "device": "/mnt/d",
@@ -156,13 +156,13 @@
   "network": [
     {
       "iface": "lo",
-      "rx_bytes": 3019110,
-      "tx_bytes": 3019110
+      "rx_bytes": 8299080,
+      "tx_bytes": 8299080
     },
     {
       "iface": "eth0",
-      "rx_bytes": 248808,
-      "tx_bytes": 47460
+      "rx_bytes": 513813,
+      "tx_bytes": 58296
     },
     {
       "iface": "docker0",
@@ -173,7 +173,7 @@
   "temperature": {
     "cpu_celsius": 0,
     "cpu_vendor": "Intel",
-    "gpu_celsius": 58,
+    "gpu_celsius": 53,
     "gpu_vendor": "NVIDIA",
     "status": "ok"
   },
@@ -187,7 +187,7 @@
         "utilization_percent": 1,
         "memory_used_mb": 0,
         "memory_total_mb": 2048,
-        "temperature_celsius": 60,
+        "temperature_celsius": 55,
         "status": "ok"
       },
       {
@@ -236,7 +236,7 @@
       "power_on_hours": 0
     }
   ],
-  "saved_at": "2025-12-17T18:16:24.555314Z",
-  "log_timestamp": "17/12/2025 18:16:24",
+  "saved_at": "2025-12-18T10:22:04.498522Z",
+  "log_timestamp": "18/12/2025 10:22:04",
   "source": "host-api"
 }

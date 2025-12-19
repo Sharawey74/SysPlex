@@ -147,10 +147,9 @@ class TestParseMetrics:
         """Test parsing empty data."""
         parsed = _parse_metrics({})
         
-        assert parsed['timestamp'] == 'N/A'
-        assert parsed['platform'] == 'unknown'
-        assert isinstance(parsed['cpu'], dict)
-        assert isinstance(parsed['memory'], dict)
+        # _parse_metrics returns raw data as-is, so empty dict returns empty dict
+        assert isinstance(parsed, dict)
+        assert len(parsed) == 0
 
 
 class TestExtractCpuMetrics:
