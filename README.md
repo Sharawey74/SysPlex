@@ -1,4 +1,4 @@
-# System Monitor - Professional Observability Dashboard
+# SysPlex - Professional Observability Dashboard
 
 ![System Monitor](https://img.shields.io/badge/Status-Production%20Ready-success)
 ![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
