@@ -29,7 +29,7 @@ PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / 'data'
 HISTORY_DIR = DATA_DIR / 'history'
 HOST_LATEST_JSON = DATA_DIR / 'metrics' / 'latest.json'
-GO_LATEST_JSON = PROJECT_ROOT / 'agent' / 'bin' / 'go_latest.json'
+GO_LATEST_JSON = PROJECT_ROOT / 'agents' / 'go' / 'bin' / 'go_latest.json'
 REPORTS_DIR = DATA_DIR / 'reports'
 ALERTS_FILE = DATA_DIR / 'alerts' / 'alerts.json'
 
@@ -109,7 +109,7 @@ def get_native_metrics():
     Proxy endpoint for Native Go Agent metrics.
     Strategy:
     1. Try live API (http://localhost:8889)
-    2. Fallback to reading 'agent/bin/go_latest.json' (if agent is writing files but API unreachable)
+    2. Fallback to reading 'agents/go/bin/go_latest.json' (if agent is writing files but API unreachable)
     """
     # 1. Try Live API
     try:

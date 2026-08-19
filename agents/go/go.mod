@@ -1,4 +1,4 @@
-module github.com/Sharawey74/SysPlex/agent
+module github.com/Sharawey74/SysPlex/agents/go
 
 go 1.21
 

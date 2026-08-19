@@ -18,6 +18,7 @@
 # Re-include only what the build needs.
 !requirements.txt
 !server/
+!agents/container/
 !docker-entrypoint.sh
 
 # Re-exclude generated and local files that live inside the allowed paths.

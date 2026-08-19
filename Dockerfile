@@ -54,6 +54,7 @@ RUN echo "━━━━━━━━━━━━━━━━━━━━━━━�
 
 # Copy application files
 COPY server/ ./server/
+COPY agents/container/ ./agents/container/
 
 # Create data directories
 RUN mkdir -p \

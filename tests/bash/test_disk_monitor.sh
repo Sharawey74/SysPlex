@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Test for disk_monitor.sh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+MONITOR_SCRIPT="${PROJECT_ROOT}/scripts/monitors/unix/disk_monitor.sh"
+
+echo "Testing disk_monitor.sh..."
+
+# Run the monitor
+output=$(bash "${MONITOR_SCRIPT}" 2>&1)
+exit_code=$?
+
+# Check exit code
+if [ $exit_code -ne 0 ]; then
+    echo "[FAIL] disk_monitor.sh exited with code $exit_code"
+    exit 1
+fi
+
+# Check if output is valid JSON
+if ! echo "$output" | python3 -m json.tool &>/dev/null && ! echo "$output" | jq . &>/dev/null 2>&1; then
+    if ! echo "$output" | grep -q "^{.*}$"; then
+        echo "[FAIL] Output is not valid JSON"
+        exit 1
+    fi
+fi
+
+# Check for required fields
+# Output is an array of disk objects
+if ! echo "$output" | grep -q '"device"'; then
+    echo "[FAIL] Missing 'device' field"
+    exit 1
+fi
+
+if ! echo "$output" | grep -q '"used_percent"'; then
+    echo "[FAIL] Missing 'used_percent' field"
+    exit 1
+fi
+
+echo "[PASS] disk_monitor.sh"
+exit 0

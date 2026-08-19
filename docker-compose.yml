@@ -20,7 +20,7 @@ services:
     volumes:
       # Application data
       - ./data:/app/data
-      - ./agent/bin:/app/agent/bin:ro
+      - ./agents/go/bin:/app/agents/go/bin:ro
 
       # Optional: Host system paths (for container metrics only)
       - /proc:/host/proc:ro
