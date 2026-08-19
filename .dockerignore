@@ -22,7 +22,6 @@
 !templates/
 !core/
 !display/
-!scripts/
 !dashboard_tui.py
 !docker-entrypoint.sh
 
@@ -34,5 +33,5 @@
 **/.DS_Store
 **/Thumbs.db
 
-# NOTE: display/ and scripts/ are deleted in Phase 1 (ADR-0008, ADR-0014) and
-# their `!` lines should be removed with them. web/ becomes server/ in Phase 8.
+# NOTE: display/ is deleted later in Phase 1 (ADR-0014) and web/ becomes server/
+# in Phase 8; drop or rename their `!` lines with those changes.
