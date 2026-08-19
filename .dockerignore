@@ -21,9 +21,6 @@
 !static/
 !templates/
 !core/
-!display/
-!scripts/
-!dashboard_tui.py
 !docker-entrypoint.sh
 
 # Re-exclude generated and local files that live inside the allowed paths.
@@ -34,5 +31,4 @@
 **/.DS_Store
 **/Thumbs.db
 
-# NOTE: display/ and scripts/ are deleted in Phase 1 (ADR-0008, ADR-0014) and
-# their `!` lines should be removed with them. web/ becomes server/ in Phase 8.
+# NOTE: web/ becomes server/ in Phase 8; rename its `!` line with that change.

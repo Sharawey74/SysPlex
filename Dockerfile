@@ -57,9 +57,6 @@ COPY web/ ./web/
 COPY static/ ./static/
 COPY templates/ ./templates/
 COPY core/ ./core/
-COPY display/ ./display/
-COPY scripts/ ./scripts/
-COPY dashboard_tui.py .
 
 # Create data directories
 RUN mkdir -p \
@@ -67,13 +64,6 @@ RUN mkdir -p \
     /app/data/logs \
     /app/data/alerts \
     /app/reports
-
-# Make scripts executable
-RUN echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" && \
-    echo "🔧 Setting Up Scripts and Permissions..." && \
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" && \
-    find /app/scripts -type f -name "*.sh" -exec chmod +x {} \; && \
-    echo "✓ Scripts configured"
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
