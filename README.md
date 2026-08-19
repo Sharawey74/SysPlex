@@ -10,6 +10,7 @@
 <a href="agents/bash"><img src="https://img.shields.io/badge/Bash-5.x-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white" alt="Bash"></a>
 <a href="agents/powershell"><img src="https://img.shields.io/badge/PowerShell-7-5391FE?style=for-the-badge&logo=powershell&logoColor=white" alt="PowerShell"></a>
 <a href="docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
+<a href="https://hub.docker.com/r/sharawey74/system-monitor"><img src="https://img.shields.io/badge/Docker_Hub-published-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Hub"></a>
 </p>
 
 <p>
@@ -318,6 +319,57 @@ pwsh tests/powershell/Run-AllTests.ps1
 
 ---
 
+## Docker image
+
+Published on Docker Hub — pull and run without building:
+
+```bash
+docker pull sharawey74/system-monitor:latest
+```
+```bash
+docker run -d -p 5000:5000   --add-host=host.docker.internal:host-gateway   -v "$(pwd)/data:/app/data"   --name sysplex-dashboard   sharawey74/system-monitor:latest
+```
+
 <div align="center">
-<sub>Built by <a href="https://github.com/Sharawey74">Abdelrhman Mohamed</a></sub>
+
+[![Docker Hub](https://img.shields.io/badge/hub.docker.com-sharawey74%2Fsystem--monitor-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://hub.docker.com/r/sharawey74/system-monitor)
+
+[![Image Size](https://img.shields.io/docker/image-size/sharawey74/system-monitor/latest?style=flat-square&logo=docker&logoColor=white&label=image%20size)](https://hub.docker.com/r/sharawey74/system-monitor)
+[![Pulls](https://img.shields.io/docker/pulls/sharawey74/system-monitor?style=flat-square&logo=docker&logoColor=white&label=pulls)](https://hub.docker.com/r/sharawey74/system-monitor)
+[![Version](https://img.shields.io/docker/v/sharawey74/system-monitor?style=flat-square&logo=docker&logoColor=white&label=version&sort=semver)](https://hub.docker.com/r/sharawey74/system-monitor/tags)
+
+</div>
+
+Remember to start an agent on the host first — the dashboard renders what agents publish.
+
+---
+
+<div align="center">
+
+### Support the project
+
+If SysPlex is useful to you, a star helps others find it.
+
+[![Stars](https://img.shields.io/github/stars/Sharawey74/SysPlex?style=for-the-badge&logo=github&logoColor=white&color=FFD43B&label=Star)](https://github.com/Sharawey74/SysPlex/stargazers)
+[![Forks](https://img.shields.io/github/forks/Sharawey74/SysPlex?style=for-the-badge&logo=github&logoColor=white&color=5391FE&label=Fork)](https://github.com/Sharawey74/SysPlex/network/members)
+[![Watchers](https://img.shields.io/github/watchers/Sharawey74/SysPlex?style=for-the-badge&logo=github&logoColor=white&color=00ADD8&label=Watch)](https://github.com/Sharawey74/SysPlex/watchers)
+
+[![Issues](https://img.shields.io/github/issues/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex/issues)
+[![Pull Requests](https://img.shields.io/github/issues-pr/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex/pulls)
+[![Last Commit](https://img.shields.io/github/last-commit/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex/commits)
+[![Repo Size](https://img.shields.io/github/repo-size/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex)
+[![Top Language](https://img.shields.io/github/languages/top/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex)
+[![Languages](https://img.shields.io/github/languages/count/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white&label=languages)](https://github.com/Sharawey74/SysPlex)
+
+<br>
+
+**Issues and pull requests welcome** — new agent implementations, additional sensor
+sources and platform coverage are all good places to start.
+
+<br>
+
+<sub>Built by <a href="https://github.com/Sharawey74"><b>Abdelrhman Mohamed</b></a></sub>
+
+<sub><a href="https://github.com/Sharawey74/SysPlex">GitHub</a> · <a href="https://hub.docker.com/r/sharawey74/system-monitor">Docker Hub</a> · <a href="https://github.com/Sharawey74/SysPlex/issues">Report an issue</a></sub>
+
 </div>
