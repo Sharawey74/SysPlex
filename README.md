@@ -352,10 +352,8 @@ If SysPlex is useful to you, a star helps others find it.
 
 [![Stars](https://img.shields.io/github/stars/Sharawey74/SysPlex?style=for-the-badge&logo=github&logoColor=white&color=FFD43B&label=Star)](https://github.com/Sharawey74/SysPlex/stargazers)
 [![Forks](https://img.shields.io/github/forks/Sharawey74/SysPlex?style=for-the-badge&logo=github&logoColor=white&color=5391FE&label=Fork)](https://github.com/Sharawey74/SysPlex/network/members)
-[![Watchers](https://img.shields.io/github/watchers/Sharawey74/SysPlex?style=for-the-badge&logo=github&logoColor=white&color=00ADD8&label=Watch)](https://github.com/Sharawey74/SysPlex/watchers)
 
 [![Issues](https://img.shields.io/github/issues/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex/issues)
-[![Pull Requests](https://img.shields.io/github/issues-pr/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex/pulls)
 [![Last Commit](https://img.shields.io/github/last-commit/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex/commits)
 [![Repo Size](https://img.shields.io/github/repo-size/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex)
 [![Top Language](https://img.shields.io/github/languages/top/Sharawey74/SysPlex?style=flat-square&logo=github&logoColor=white)](https://github.com/Sharawey74/SysPlex)
