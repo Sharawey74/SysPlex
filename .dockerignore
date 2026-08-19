@@ -1,0 +1,38 @@
+# SysPlex — Docker build context
+#
+# Allowlist, not denylist. Everything is excluded, then the eight paths the
+# Dockerfile actually COPYs are added back.
+#
+# A denylist was tried before (Docker/.dockerignore) and failed the way
+# denylists do: it never mentioned Host2/bin/ or libs/, so every build shipped
+# 24 MB of Go binaries and 1.6 MB of .NET DLLs to the daemon, plus a 23 MB .git
+# directory. It also sat in Docker/, where the daemon never looks — the context
+# root is the only place a .dockerignore is read.
+#
+# Keep this in sync with the COPY lines in the Dockerfile. If a build fails on
+# a missing file, the fix is a new `!` line here, not a switch back to a denylist.
+
+# Exclude everything.
+*
+
+# Re-include only what the build needs.
+!requirements.txt
+!web/
+!static/
+!templates/
+!core/
+!display/
+!scripts/
+!dashboard_tui.py
+!docker-entrypoint.sh
+
+# Re-exclude generated and local files that live inside the allowed paths.
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/*.backup
+**/.DS_Store
+**/Thumbs.db
+
+# NOTE: display/ and scripts/ are deleted in Phase 1 (ADR-0008, ADR-0014) and
+# their `!` lines should be removed with them. web/ becomes server/ in Phase 8.
