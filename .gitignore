@@ -19,12 +19,13 @@ Host/output/*.json
 Host/output/temp/
 !Host/output/.gitkeep
 
-# Host2 (Go agent) output
+# Host2 (Go agent) build output
+# NOTE: build.sh produces host-agent-{linux,macos,windows.exe}. The previous
+# patterns said "host2-agent-*" and therefore never matched anything, which is
+# how 24 MB of binaries reached the history. Binaries ship as GitHub Release
+# assets instead - see adr/0007-binaries-via-releases.md
+Host2/bin/host-agent-*
 Host2/bin/go_latest.json
-Host2/bin/host2-agent
-Host2/bin/host2-agent.exe
-Host2/bin/host2-agent-linux
-Host2/bin/host2-agent-darwin
 !Host2/bin/.gitkeep
 
 # Data files (generated at runtime)
@@ -119,6 +120,38 @@ docker-compose.override.yml
 logs/
 /tmp/
 *.pid
+
+# ============================================
+# Vendored third-party binaries
+# ============================================
+# Fetched by windows/scripts/setup_libs.ps1, not committed.
+# LibreHardwareMonitor is MPL-2.0; redistributing the binary carries
+# attribution obligations this repo does not satisfy.
+libs/*.dll
+
+# ============================================
+# Frontend (Phase 7)
+# ============================================
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+
+# ============================================
+# Environment
+# ============================================
+.env
+.env.*
+!.env.example
+*.local
+
+# ============================================
+# Personal working files (not project documentation)
+# ============================================
+# plans/ and adr/ ARE tracked - they are the record of why this system looks
+# the way it does. Only these two are personal.
+TASKS.md
+memory/
 
 # ============================================
 # Keep Important Files
