@@ -26,6 +26,11 @@ Host/output/temp/
 # assets instead - see adr/0007-binaries-via-releases.md
 Host2/bin/host-agent-*
 Host2/bin/go_latest.json
+# `go build ./...` drops the binary in the package directory, not bin/
+Host2/system-monitor-agent
+Host2/system-monitor-agent.exe
+Host2/*.test
+Host2/*.bin
 !Host2/bin/.gitkeep
 
 # Data files (generated at runtime)

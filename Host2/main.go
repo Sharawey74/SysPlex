@@ -38,6 +38,8 @@ type SystemMetrics struct {
 	Network     []NetworkInfo   `json:"network"`
 	Temperature TemperatureInfo `json:"temperature"`
 	GPU         GPUInfo         `json:"gpu"`
+	Fans        FanInfo         `json:"fans"`
+	Smart       SmartInfo       `json:"smart"`
 	Source      string          `json:"source"`
 }
 
@@ -104,6 +106,39 @@ type GPUDevice struct {
 	MemoryTotalMB      int    `json:"memory_total_mb"`
 	TemperatureCelsius int    `json:"temperature_celsius"`
 	Status             string `json:"status"`
+}
+
+// FanInfo and SmartInfo mirror GPUInfo's {status, count, devices} shape.
+//
+// The Bash monitors they replace emitted a polymorphic value: a bare JSON array
+// on success and an object {"status": "..."} otherwise. A consumer had to
+// type-check before reading, and no schema can describe it cleanly. Fixed here.
+//
+// Status is one of:
+//   ok           readings collected
+//   unavailable  the platform or tooling cannot provide them
+//   restricted   the tooling exists but was denied access (needs elevation)
+type FanInfo struct {
+	Status  string      `json:"status"`
+	Count   int         `json:"count"`
+	Devices []FanDevice `json:"devices"`
+}
+
+type FanDevice struct {
+	Label string `json:"label"`
+	RPM   int    `json:"rpm"`
+}
+
+type SmartInfo struct {
+	Status  string        `json:"status"`
+	Count   int           `json:"count"`
+	Devices []SmartDevice `json:"devices"`
+}
+
+type SmartDevice struct {
+	Device       string `json:"device"`
+	Health       string `json:"health"`
+	PowerOnHours int    `json:"power_on_hours"`
 }
 
 func collectMetrics() (*SystemMetrics, error) {
@@ -210,6 +245,10 @@ func collectMetrics() (*SystemMetrics, error) {
 
 	// GPU Info (using nvidia-smi if available)
 	metrics.GPU = collectGPUInfo()
+
+	// Fan speeds (Linux hwmon) and disk health (smartctl)
+	metrics.Fans = collectFanInfo()
+	metrics.Smart = collectSmartInfo()
 
 	return metrics, nil
 }
@@ -619,7 +658,7 @@ func collectWindowsGPUs() GPUInfo {
 	}
 
 	var controllers []WinVideoController
-	
+
 	// Handle single object vs array return from PowerShell
 	jsonStr := strings.TrimSpace(string(output))
 	if strings.HasPrefix(jsonStr, "{") {
@@ -655,8 +694,8 @@ func collectWindowsGPUs() GPUInfo {
 		// Note: Accurate GPU temp for AMD/Intel often requires complex API calls (ADL/IGCL)
 		// We try to grab the generic CPU temp as a proxy or 0 if unknown.
 		// A future improvement could try OpenHardwareMonitor specifically for this GPU.
-		temp := 0 
-		
+		temp := 0
+
 		gpuInfo.Devices = append(gpuInfo.Devices, GPUDevice{
 			Vendor:             vendor,
 			Model:              card.Name,
@@ -780,6 +819,206 @@ func startPeriodicFileWriter() {
 			log.Printf("[FILE] Error writing metrics: %v", err)
 		}
 	}
+}
+
+// collectFanInfo reads fan tachometers from the Linux hwmon subsystem.
+//
+// Reads /sys/class/hwmon/hwmon*/fan*_input directly rather than shelling out to
+// `sensors`, which is what the Bash monitor did. Sysfs is the same source
+// lm-sensors reads, so this drops a runtime dependency without losing anything.
+//
+// Windows and macOS report unavailable: neither exposes fan tachometers through
+// an API reachable without a kernel driver or SMC access, which is the same
+// boundary that limits CPU temperature there.
+func collectFanInfo() FanInfo {
+	info := FanInfo{Status: "unavailable", Devices: []FanDevice{}}
+
+	if runtime.GOOS != "linux" {
+		return info
+	}
+
+	hwmons, err := filepath.Glob("/sys/class/hwmon/hwmon*")
+	if err != nil || len(hwmons) == 0 {
+		return info
+	}
+
+	for _, hwmon := range hwmons {
+		chipName := readSysfsString(filepath.Join(hwmon, "name"))
+
+		inputs, err := filepath.Glob(filepath.Join(hwmon, "fan*_input"))
+		if err != nil {
+			continue
+		}
+
+		for _, input := range inputs {
+			raw := readSysfsString(input)
+			rpm, err := strconv.Atoi(raw)
+			if err != nil || rpm <= 0 {
+				// A tachometer reporting 0 means the fan is stopped or the
+				// header is unpopulated. Reporting it as a device would imply
+				// a measurement that was never taken.
+				continue
+			}
+
+			// Prefer the chip's own label, fall back to the input filename.
+			base := strings.TrimSuffix(filepath.Base(input), "_input")
+			label := readSysfsString(filepath.Join(hwmon, base+"_label"))
+			if label == "" {
+				label = base
+				if chipName != "" {
+					label = chipName + "/" + base
+				}
+			}
+
+			info.Devices = append(info.Devices, FanDevice{Label: label, RPM: rpm})
+		}
+	}
+
+	if len(info.Devices) > 0 {
+		info.Status = "ok"
+		info.Count = len(info.Devices)
+	}
+	return info
+}
+
+// readSysfsString reads a single-line sysfs attribute, returning "" on any error.
+// Absent attributes are normal in hwmon, not exceptional.
+func readSysfsString(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(data))
+}
+
+// collectSmartInfo reports disk health via smartctl.
+//
+// Uses `smartctl --scan` to enumerate devices rather than globbing /dev for
+// sd[a-z] and nvme[0-9]n[0-9] as the Bash monitor did. The glob missed NVMe
+// namespaces past the first, virtio and SCSI devices, and anything behind a
+// RAID controller; --scan asks smartctl what it can actually address.
+//
+// SMART almost always needs elevation (root, or Administrator on Windows).
+// Denied access reports "restricted" rather than "unavailable" so the UI can
+// tell "your disk cannot report this" from "run me with more privilege".
+func collectSmartInfo() SmartInfo {
+	info := SmartInfo{Status: "unavailable", Devices: []SmartDevice{}}
+
+	if _, err := exec.LookPath("smartctl"); err != nil {
+		return info
+	}
+
+	devices := scanSmartDevices()
+	if len(devices) == 0 {
+		return info
+	}
+
+	restricted := false
+	for _, device := range devices {
+		health, denied := smartHealth(device)
+		if denied {
+			restricted = true
+			continue
+		}
+		if health == "" {
+			continue
+		}
+		info.Devices = append(info.Devices, SmartDevice{
+			Device:       device,
+			Health:       health,
+			PowerOnHours: smartPowerOnHours(device),
+		})
+	}
+
+	switch {
+	case len(info.Devices) > 0:
+		info.Status = "ok"
+		info.Count = len(info.Devices)
+	case restricted:
+		info.Status = "restricted"
+	}
+	return info
+}
+
+// scanSmartDevices returns the device paths smartctl can address.
+func scanSmartDevices() []string {
+	output, err := exec.Command("smartctl", "--scan").Output()
+	if err != nil {
+		return nil
+	}
+
+	var devices []string
+	for _, line := range strings.Split(string(output), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" || strings.HasPrefix(line, "#") {
+			continue
+		}
+		// Lines look like: /dev/sda -d scsi # /dev/sda, SCSI device
+		fields := strings.Fields(line)
+		if len(fields) > 0 {
+			devices = append(devices, fields[0])
+		}
+	}
+	return devices
+}
+
+// smartHealth returns PASSED, FAILED or UNKNOWN, plus whether access was denied.
+//
+// smartctl encodes failures in a bitmask exit status; bit 1 (value 2) means the
+// device could not be opened, which in practice is a permissions problem. The
+// health verdict is still parsed from stdout, because smartctl exits non-zero
+// for warnings that do not prevent a reading.
+func smartHealth(device string) (health string, denied bool) {
+	output, err := exec.Command("smartctl", "-H", device).Output()
+	text := string(output)
+
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode()&2 != 0 {
+			return "", true
+		}
+	}
+
+	switch {
+	case strings.Contains(text, "PASSED"), strings.Contains(text, "OK"):
+		return "PASSED", false
+	case strings.Contains(text, "FAILED"):
+		return "FAILED", false
+	case text == "":
+		return "", false
+	default:
+		return "UNKNOWN", false
+	}
+}
+
+// smartPowerOnHours reads the power-on hours attribute, 0 if unreadable.
+// ATA reports it as Power_On_Hours in the attribute table; NVMe reports it as
+// "Power On Hours:" in the SMART log, so both spellings are checked.
+func smartPowerOnHours(device string) int {
+	output, err := exec.Command("smartctl", "-A", device).Output()
+	if err != nil && len(output) == 0 {
+		return 0
+	}
+
+	for _, line := range strings.Split(string(output), "\n") {
+		if strings.Contains(line, "Power_On_Hours") {
+			// ATA: ID# ATTRIBUTE_NAME FLAG VAL WORST THRESH TYPE UPDATED WHEN_FAILED RAW_VALUE
+			fields := strings.Fields(line)
+			if len(fields) >= 10 {
+				if hours, err := strconv.Atoi(fields[9]); err == nil {
+					return hours
+				}
+			}
+		}
+		if strings.HasPrefix(strings.TrimSpace(line), "Power On Hours:") {
+			// NVMe: "Power On Hours:                     1,234"
+			value := strings.TrimSpace(strings.SplitN(line, ":", 2)[1])
+			value = strings.ReplaceAll(value, ",", "")
+			if hours, err := strconv.Atoi(value); err == nil {
+				return hours
+			}
+		}
+	}
+	return 0
 }
 
 func main() {
