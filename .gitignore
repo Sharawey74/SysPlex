@@ -29,9 +29,14 @@ Host2/bin/go_latest.json
 !Host2/bin/.gitkeep
 
 # Data files (generated at runtime)
+# NOTE: patterns containing a slash are anchored to this file's directory, so
+# these do NOT cover windows/data/. That subtree is listed explicitly below.
 data/logs/*.log
 data/metrics/*.json
 data/alerts/*.json
+
+# PowerShell agent runtime state (the tree itself is removed in Phase 1)
+windows/data/
 !data/logs/.gitkeep
 !data/metrics/.gitkeep
 !data/alerts/.gitkeep
