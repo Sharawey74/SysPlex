@@ -1,192 +1,319 @@
 <div align="center">
 
-# SysPlex
+<h1>SysPlex</h1>
 
-**Cross-platform hardware telemetry, from the one place that can actually read it.**
+**Cross-platform observability for real hardware**
 
-[![Go](https://img.shields.io/badge/Go-1.21-00ADD8?style=for-the-badge&logo=go&logoColor=white)](agents/go)
-[![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white)](server)
-[![Bash](https://img.shields.io/badge/Bash-5.x-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white)](agents/bash)
-[![PowerShell](https://img.shields.io/badge/PowerShell-7-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](agents/powershell)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](docker-compose.yml)
+<p>
+<a href="agents/go"><img src="https://img.shields.io/badge/Go-1.21-00ADD8?style=for-the-badge&logo=go&logoColor=white" alt="Go"></a>
+<a href="server"><img src="https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"></a>
+<a href="agents/bash"><img src="https://img.shields.io/badge/Bash-5.x-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white" alt="Bash"></a>
+<a href="agents/powershell"><img src="https://img.shields.io/badge/PowerShell-7-5391FE?style=for-the-badge&logo=powershell&logoColor=white" alt="PowerShell"></a>
+<a href="docker-compose.yml"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker"></a>
+</p>
 
-[![Linux](https://img.shields.io/badge/Linux-supported-FCC624?style=flat-square&logo=linux&logoColor=black)](#)
-[![Windows](https://img.shields.io/badge/Windows-supported-0078D6?style=flat-square&logo=windows&logoColor=white)](#)
-[![macOS](https://img.shields.io/badge/macOS-supported-000000?style=flat-square&logo=apple&logoColor=white)](#)
-[![WSL2](https://img.shields.io/badge/WSL2-supported-4EAA25?style=flat-square&logo=linux&logoColor=white)](#)
-[![Flask](https://img.shields.io/badge/Flask-3.0-000000?style=flat-square&logo=flask&logoColor=white)](#)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100-009688?style=flat-square&logo=fastapi&logoColor=white)](#)
+<p>
+<img src="https://img.shields.io/badge/Linux-supported-FCC624?style=flat-square&logo=linux&logoColor=black" alt="Linux">
+<img src="https://img.shields.io/badge/Windows-supported-0078D6?style=flat-square&logo=windows&logoColor=white" alt="Windows">
+<img src="https://img.shields.io/badge/macOS-supported-000000?style=flat-square&logo=apple&logoColor=white" alt="macOS">
+<img src="https://img.shields.io/badge/WSL2-supported-4EAA25?style=flat-square&logo=linux&logoColor=white" alt="WSL2">
+<img src="https://img.shields.io/badge/Flask-3.0-000000?style=flat-square&logo=flask&logoColor=white" alt="Flask">
+<img src="https://img.shields.io/badge/FastAPI-0.100-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
+<img src="https://img.shields.io/badge/Chart.js-charts-FF6384?style=flat-square&logo=chartdotjs&logoColor=white" alt="Chart.js">
+<img src="https://img.shields.io/badge/NVIDIA-nvidia--smi-76B900?style=flat-square&logo=nvidia&logoColor=white" alt="NVIDIA">
+</p>
 
 </div>
 
 ---
 
-## The problem it solves
+## Overview
 
-A dashboard running inside a container cannot read your CPU temperature.
+A **cross-platform observability platform** engineered for comprehensive system monitoring across **Windows, Linux, macOS and WSL2**, built on a **dual-agent architecture** that trades off breadth of sensor coverage against deployment simplicity:
 
-Not because containers are sandboxed — on native Linux a container shares the host kernel and reads `coretemp` through sysfs perfectly well. The wall is **Docker Desktop**, which runs containers inside a Linux VM, and the VM has no thermal sensor to expose. Measured on WSL2:
+<table>
+<tr>
+<td width="50%" valign="top">
 
-```console
-$ uname -r
-6.6.87.2-microsoft-standard-WSL2
+### <img src="https://img.shields.io/badge/-Bash_Host_Agent-4EAA25?style=flat-square&logo=gnubash&logoColor=white" alt="Bash">
 
-$ for h in /sys/class/hwmon/hwmon*; do echo "$h : $(cat $h/name)"; done
-/sys/class/hwmon/hwmon0 : AC1      # AC adapter
-/sys/class/hwmon/hwmon1 : BAT1     # battery
-                                   # no coretemp, no thermal zones
+Universal monitoring through **native OS tooling** — `lm-sensors`, `smartctl`, `nvidia-smi`, `radeontop`, `intel_gpu_top`. Runs on any Unix-like system, and on Windows through WSL or Git Bash.
 
-$ grep -c coretemp /proc/modules
-0
-```
+**Widest sensor coverage.** The only agent reporting fan tachometers and SMART disk health. Paired with a **PowerShell collector** using WMI and LibreHardwareMonitor for native Windows sensor access.
 
-Reading CPU temperature requires ring-0 access to the processor's model-specific registers. Each layer between your code and the silicon either passes that through or does not:
+</td>
+<td width="50%" valign="top">
 
-| Layer | MSR access | Why |
-|:--|:--:|:--|
-| Linux userspace + `coretemp` | ✅ | exposed through sysfs |
-| Container | ✅ | shares the host kernel |
-| Virtual machine | ❌ | no MSR passthrough to the guest |
-| Windows userspace | ❌ | needs a signed kernel driver |
+### <img src="https://img.shields.io/badge/-Go_Native_Agent-00ADD8?style=flat-square&logo=go&logoColor=white" alt="Go">
 
-**SysPlex solves it by collecting where the hardware is.** Agents run natively on the machine and expose readings over HTTP; the dashboard renders them and touches no hardware at all — which is why its container needs no privileges.
+High-performance compiled monitoring built on the **`gopsutil`** library. Cross-compiles to native binaries for Windows, Linux and macOS.
+
+**Zero runtime dependencies.** One static file — no interpreter, no packages, no install step on the monitored machine. Ships as a downloadable release artifact.
+
+</td>
+</tr>
+</table>
+
+Both agents run **natively on the host**, giving them direct access to physical sensors — CPU and GPU temperatures, fan speeds, SMART health, VRAM utilization — that a containerized collector cannot reach. The **web dashboard runs in Docker** for portability and clean deployment, consuming what the agents publish and touching no hardware itself, which is why its container runs unprivileged.
+
+Run either agent alone, or run both and compare their readings side by side.
 
 ---
 
 ## Architecture
 
+Two tiers, split along the line where hardware access ends.
+
 ```
-        ┌──────────────────────────────────────────────┐
-        │  HOST  (native — full hardware access)       │
-        │                                              │
-        │   agents/go          Go binary      :8889    │
-        │   agents/bash        Bash + FastAPI :8888    │
-        │   agents/powershell  WMI + LHM              │
-        └───────────────────┬──────────────────────────┘
-                            │  HTTP  ·  data/metrics/*.json
-        ┌───────────────────▼──────────────────────────┐
-        │  CONTAINER  (unprivileged — renders only)    │
-        │                                              │
-        │   server/    Flask API + dashboard   :5000   │
-        │   server/collector   background sampling     │
-        └──────────────────────────────────────────────┘
+╔══════════════════════════════════════════════════════════════════════════════╗
+║  TIER 1 — COLLECTION                                    runs natively on host ║
+║                                                          full sensor access   ║
+║   ┌────────────────────┐  ┌────────────────────┐  ┌────────────────────┐    ║
+║   │  Go Native Agent   │  │  Bash Host Agent   │  │  PowerShell        │    ║
+║   │  ────────────────  │  │  ────────────────  │  │  ────────────────  │    ║
+║   │  gopsutil          │  │  lm-sensors        │  │  WMI / CIM         │    ║
+║   │  nvidia-smi        │  │  smartctl          │  │  LibreHardware-    │    ║
+║   │  WMI (win)         │  │  nvidia-smi        │  │  Monitor (MSR)     │    ║
+║   │                    │  │  radeontop         │  │                    │    ║
+║   │  static binary     │  │  FastAPI :8888     │  │  admin required    │    ║
+║   │  HTTP :8889        │  │                    │  │  for temperatures  │    ║
+║   └─────────┬──────────┘  └─────────┬──────────┘  └─────────┬──────────┘    ║
+╚═════════════╪═══════════════════════╪═══════════════════════╪════════════════╝
+              │                       │                       │
+              └───────────────────────┼───────────────────────┘
+                                      │
+                    unified JSON envelope · HTTP + file
+                                      │
+                         host.docker.internal
+                                      │
+╔═════════════════════════════════════▼════════════════════════════════════════╗
+║  TIER 2 — PRESENTATION                             runs in Docker, no privs   ║
+║                                                     cap_drop: ALL             ║
+║   ┌──────────────────────────────────────────────────────────────────────┐  ║
+║   │  server/                                                    :5000    │  ║
+║   │  ──────────────────────────────────────────────────────────────────  │  ║
+║   │   app.py        REST API + dashboard routes         (Flask)          │  ║
+║   │   metrics.py    envelope parsing and normalization                   │  ║
+║   │   alerts.py     threshold evaluation                                 │  ║
+║   │   reports.py    HTML + Markdown report generation                    │  ║
+║   │   collector.py  background sampling → data/history/                  │  ║
+║   └──────────────────────────────────────────────────────────────────────┘  ║
+║                                      │                                        ║
+║   ┌──────────────────────────────────▼───────────────────────────────────┐  ║
+║   │  Web dashboard — Chart.js, live polling, side-by-side agent view     │  ║
+║   └──────────────────────────────────────────────────────────────────────┘  ║
+╚══════════════════════════════════════════════════════════════════════════════╝
 ```
 
-Every collector emits the **same JSON envelope**, whatever language it is written in:
+**Why the split.** Physical sensors are reachable only from a process with host-level access — `/sys/class/hwmon` on Linux, model-specific registers via a kernel driver on Windows, the SMC on macOS. Keeping collection on the host and rendering in the container means the dashboard needs no elevated privileges, no `/proc` `/sys` `/dev` mounts, and no per-platform special-casing.
 
-```jsonc
-{
-  "timestamp": "…", "platform": "linux",
-  "system":      { "os", "hostname", "uptime_seconds", "kernel" },
-  "cpu":         { "usage_percent", "logical_processors", "load_1/5/15", "vendor", "model" },
-  "memory":      { "total_mb", "used_mb", "available_mb", "usage_percent" },
-  "disk":     [  { "device", "filesystem", "total_gb", "used_gb", "used_percent" } ],
-  "network":  [  { "iface", "rx_bytes", "tx_bytes" } ],
-  "temperature": { "cpu_celsius", "gpu_celsius", "status" },
-  "gpu":         { "status", "count", "devices": [ … ] },
-  "fans":        { "status", "count", "devices": [ … ] },   // optional
-  "smart":       { "status", "count", "devices": [ … ] }    // optional
-}
-```
+---
 
-`fans`, `smart` and a populated `gpu.devices` are optional — absent hardware reports `status: "unavailable"`, never a fabricated zero.
+## Metrics
+
+| Group | Fields | Sources |
+|:--|:--|:--|
+| **System** | OS, hostname, kernel, uptime | `uname`, gopsutil, WMI |
+| **CPU** | usage %, logical processors, load 1/5/15, vendor, model | `/proc/stat`, gopsutil, WMI |
+| **Memory** | total, used, free, available, usage % | `/proc/meminfo`, gopsutil |
+| **Disk** | per-mount device, filesystem, total/used GB, used % | `df`, gopsutil |
+| **Network** | per-interface rx/tx bytes | `/proc/net/dev`, gopsutil |
+| **Temperature** | CPU °C, GPU °C, vendor | `lm-sensors`, hwmon, `nvidia-smi`, LibreHardwareMonitor |
+| **GPU** | per-device model, utilization %, VRAM used/total, temperature | `nvidia-smi`, `radeontop`, `intel_gpu_top`, `lspci` |
+| **Fans** | per-sensor label and RPM | hwmon `fan*_input`, `lm-sensors` |
+| **SMART** | per-disk health verdict, power-on hours | `smartctl` |
+
+Optional groups report `status: "unavailable"` when the hardware or tooling is absent — never a fabricated zero.
 
 ---
 
 ## Quick start
 
-**1 — run an agent on the machine you want to measure** *(natively, not in Docker)*
+### 1 · Start an agent on the machine you want to measure
+
+Agents run **natively**, not in a container — that is what gives them sensor access.
+
+<details open>
+<summary><b>Go Native Agent</b> — recommended, no dependencies</summary>
 
 ```bash
-cd agents/go && ./build.sh && ./bin/host-agent-linux     # Go, no dependencies
+cd agents/go
+./build.sh                      # cross-compiles linux / macos / windows
+./bin/host-agent-linux          # serves on :8889
 ```
+</details>
+
+<details>
+<summary><b>Bash Host Agent</b> — widest sensor coverage</summary>
+
 ```bash
-bash agents/bash/monitors/main_monitor.sh                # Bash, needs lm-sensors
+sudo apt install lm-sensors smartutils && sudo sensors-detect --auto
+
+bash agents/bash/monitors/main_monitor.sh     # one-shot collection
+bash agents/bash/loop/host_monitor_loop.sh    # continuous
+python agents/bash/api/server.py              # REST API on :8888
 ```
+</details>
+
+<details>
+<summary><b>PowerShell Agent</b> — native Windows sensors</summary>
+
 ```powershell
-pwsh agents/powershell/scripts/main_monitor.ps1          # Windows, admin for temps
+pwsh agents/powershell/scripts/setup_libs.ps1     # fetch LibreHardwareMonitor
+pwsh agents/powershell/scripts/run_as_admin.ps1   # elevation for MSR access
+pwsh agents/powershell/scripts/main_monitor.ps1
 ```
+</details>
 
-**2 — start the dashboard**
+### 2 · Start the dashboard
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-**3 — open** http://localhost:5000
+### 3 · Open the dashboard
+
+**http://localhost:5000**
 
 ---
 
-## Agents
+## Agent comparison
 
-| | Language | Port | Platforms | Strength |
-|:--|:--|:--:|:--|:--|
-| **`agents/go`** | Go + gopsutil | 8889 | Linux · Windows · macOS | one static binary, zero runtime dependencies |
-| **`agents/bash`** | Bash + FastAPI | 8888 | Linux · macOS · WSL | widest sensor coverage via `lm-sensors`, `smartctl`, `nvidia-smi` |
-| **`agents/powershell`** | PowerShell + WMI | — | Windows | LibreHardwareMonitor for real MSR temperature readings |
-| **`agents/container`** | Bash | — | inside Docker | namespace-scoped fallback when no host agent is running |
+| | <img src="https://img.shields.io/badge/-Go-00ADD8?style=flat-square&logo=go&logoColor=white"> | <img src="https://img.shields.io/badge/-Bash-4EAA25?style=flat-square&logo=gnubash&logoColor=white"> | <img src="https://img.shields.io/badge/-PowerShell-5391FE?style=flat-square&logo=powershell&logoColor=white"> |
+|:--|:--:|:--:|:--:|
+| **Port** | `8889` | `8888` | file output |
+| **Linux** | ✅ | ✅ | — |
+| **macOS** | ✅ | ✅ | — |
+| **Windows** | ✅ native | via WSL / Git Bash | ✅ native |
+| **Runtime dependencies** | none — static binary | bash, Python, lm-sensors | PowerShell 7, .NET |
+| **CPU / memory / disk / network** | ✅ | ✅ | ✅ |
+| **CPU + GPU temperature** | ✅ | ✅ | ✅ MSR via kernel driver |
+| **Fan speeds (RPM)** | ✅ hwmon | ✅ | ✅ |
+| **SMART disk health** | ✅ `smartctl` | ✅ | ✅ |
+| **Elevation required** | for SMART | for SMART | for temperatures |
+| **Startup** | instant | ~1 s per cycle | ~2 s per cycle |
 
-Run one, or run several and compare — the dashboard renders them side by side.
+---
 
-> **Windows temperatures** need Administrator. WMI's `MSAcpi_ThermalZoneTemperature` returns nothing on most consumer hardware, so the PowerShell agent loads LibreHardwareMonitor, which installs a kernel driver to read MSRs directly.
+## Unified schema
+
+Every collector emits the same envelope regardless of implementation language, so the dashboard treats them interchangeably:
+
+```jsonc
+{
+  "timestamp":   "2026-08-19T18:04:11Z",
+  "platform":    "linux",
+  "system":      { "os", "hostname", "uptime_seconds", "kernel" },
+  "cpu":         { "usage_percent", "logical_processors",
+                   "load_1", "load_5", "load_15", "vendor", "model", "status" },
+  "memory":      { "total_mb", "used_mb", "free_mb", "available_mb", "usage_percent" },
+  "disk":     [  { "device", "filesystem", "total_gb", "used_gb", "used_percent" } ],
+  "network":  [  { "iface", "rx_bytes", "tx_bytes" } ],
+  "temperature": { "cpu_celsius", "cpu_vendor", "gpu_celsius", "gpu_vendor", "status" },
+  "gpu":         { "status", "count",
+                   "devices": [ { "vendor", "model", "utilization_percent",
+                                  "memory_used_mb", "memory_total_mb",
+                                  "temperature_celsius" } ] },
+  "fans":        { "status", "count", "devices": [ { "label", "rpm" } ] },
+  "smart":       { "status", "count",
+                   "devices": [ { "device", "health", "power_on_hours" } ] }
+}
+```
 
 ---
 
 ## API
 
-| Method | Endpoint | Returns |
-|:--|:--|:--|
-| `GET` | `/api/metrics` | latest reading, newest source first |
-| `GET` | `/api/metrics/dual` | both agents side by side |
-| `GET` | `/api/metrics/native` | Go agent only |
-| `GET` | `/api/metrics/source` | which sources are reachable |
-| `POST` | `/api/refresh` | force an immediate collection |
-| `POST` | `/api/reports/generate` | build an HTML + Markdown report |
-| `GET` | `/api/health` | liveness |
+### Dashboard — `:5000`
 
-Agents expose `/metrics`, `/refresh` and `/health` on their own ports.
+| Method | Endpoint | Description |
+|:--|:--|:--|
+| `GET` | `/` | Web dashboard |
+| `GET` | `/api/metrics` | Latest reading from the highest-priority available source |
+| `GET` | `/api/metrics/dual` | Both agents, side by side |
+| `GET` | `/api/metrics/native` | Go agent only |
+| `GET` | `/api/metrics/source` | Which sources are currently reachable |
+| `POST` | `/api/refresh` | Trigger immediate collection on all agents |
+| `POST` | `/api/reports/generate` | Generate an HTML + Markdown system report |
+| `GET` | `/api/reports/download/html/<file>` | Download a generated report |
+| `GET` | `/api/health` | Liveness probe |
+
+### Agents — `:8888` (Bash) · `:8889` (Go)
+
+| Method | Endpoint | Description |
+|:--|:--|:--|
+| `GET` | `/metrics` | Current reading as the unified envelope |
+| `POST` | `/refresh` | Force an immediate collection cycle |
+| `GET` | `/health` | Agent liveness and version |
 
 ---
 
-## Layout
+## Configuration
+
+| Variable | Default | Purpose |
+|:--|:--|:--|
+| `HOST_API_URL` | `http://host.docker.internal:8888` | Bash agent endpoint |
+| `NATIVE_AGENT_URL` | `http://host.docker.internal:8889` | Go agent endpoint |
+| `USE_NATIVE_AGENT` | `false` | Prefer the Go agent as primary source |
+| `JSON_LOGGING_ENABLED` | `true` | Persist samples to `data/history/` |
+| `JSON_LOG_INTERVAL` | `60` | Sampling interval, seconds |
+| `SYSPLEX_BASH_AGENT_HOST` | `127.0.0.1` | Bind address for the Bash agent API |
+
+---
+
+## Project structure
 
 ```
 agents/
-  go/            Go agent — main.go, tests, build.sh
-  bash/          monitors/ · api/ · loop/ · service/
-  powershell/    monitors/ · scripts/ · utils/
-  container/     container-side collectors
+  go/               Go native agent — main.go, main_test.go, build.sh, bin/
+  bash/             monitors/ · api/ · loop/ · service/ · quickstart.sh
+  powershell/       monitors/ · scripts/ · utils/
+  container/        namespace-scoped collectors for in-container fallback
+
 server/
-  app.py         routes
-  metrics.py     parsing          alerts.py    thresholds
-  reports.py     HTML + Markdown  collector.py background sampling
-  static/  templates/
-data/            metrics · history · logs · alerts · reports   (runtime, ignored)
-fixtures/demo/   recorded payloads for demo mode
-tests/           Python · bash/ · powershell/ · docker/
+  app.py            REST API and dashboard routes
+  metrics.py        envelope parsing and normalization
+  alerts.py         threshold evaluation
+  reports.py        HTML and Markdown report generation
+  collector.py      background sampling into data/history/
+  static/           dashboard assets — Chart.js, CSS
+  templates/        Jinja templates
+
+data/               metrics · history · logs · alerts · reports    (runtime)
+fixtures/demo/      recorded agent payloads for offline demo mode
+tests/              Python unit tests · bash/ · powershell/ · docker/
 ```
 
 ---
 
-## Stack
+## Technology stack
 
-**Collection** Go 1.21 + gopsutil · Bash + lm-sensors/smartctl · PowerShell + WMI/LibreHardwareMonitor
-**Backend** Python 3.11 · Flask 3 (dashboard) · FastAPI (Bash agent API)
-**Frontend** Chart.js · vanilla JS
-**Runtime** Docker Compose — `cap_drop: ALL`, `no-new-privileges`, no `/proc` `/sys` `/dev` mounts
+| Layer | Technologies |
+|:--|:--|
+| **Collection** | Go 1.21 + gopsutil · Bash + lm-sensors / smartctl / nvidia-smi · PowerShell 7 + WMI / LibreHardwareMonitor |
+| **Agent API** | FastAPI + Uvicorn (Bash agent) · Go `net/http` (native agent) |
+| **Backend** | Python 3.11 · Flask 3 · Jinja2 |
+| **Frontend** | Chart.js · vanilla JavaScript · CSS custom properties |
+| **Runtime** | Docker Compose · `cap_drop: ALL` · `no-new-privileges` · healthchecks · resource limits |
+| **Testing** | pytest · `go test` · shell and PowerShell test suites |
 
 ---
 
 ## Development
 
 ```bash
-pip install -r requirements.txt && python -m pytest tests
-```
-```bash
-cd agents/go && go vet ./... && go test ./...
-```
-```bash
-python -m flask --app server.app run --port 5000     # dashboard, no container
+# Python — dashboard and backend
+pip install -r requirements.txt
+python -m pytest tests
+python -m flask --app server.app run --port 5000
+
+# Go — native agent
+cd agents/go
+go vet ./... && go test ./... && go build ./...
+
+# Shell and PowerShell suites
+bash tests/bash/run_all_tests.sh
+pwsh tests/powershell/Run-AllTests.ps1
 ```
 
 ---
