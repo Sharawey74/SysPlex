@@ -4,7 +4,7 @@
 # Dockerfile actually COPYs are added back.
 #
 # A denylist was tried before (Docker/.dockerignore) and failed the way
-# denylists do: it never mentioned Host2/bin/ or libs/, so every build shipped
+# denylists do: it never mentioned the agent binaries or vendored DLLs, so every build shipped
 # 24 MB of Go binaries and 1.6 MB of .NET DLLs to the daemon, plus a 23 MB .git
 # directory. It also sat in Docker/, where the daemon never looks — the context
 # root is the only place a .dockerignore is read.
@@ -17,10 +17,7 @@
 
 # Re-include only what the build needs.
 !requirements.txt
-!web/
-!static/
-!templates/
-!core/
+!server/
 !docker-entrypoint.sh
 
 # Re-exclude generated and local files that live inside the allowed paths.
@@ -31,4 +28,3 @@
 **/.DS_Store
 **/Thumbs.db
 
-# NOTE: web/ becomes server/ in Phase 8; rename its `!` line with that change.

@@ -5,33 +5,28 @@
 # ============================================
 
 # JSON logs and metrics
-json/*.json
-!json/.gitkeep
+data/history/*.json
+!data/history/.gitkeep
 
 # Reports (generated at runtime)
-reports/html/*.html
-reports/markdown/*.md
-!reports/html/.gitkeep
-!reports/markdown/.gitkeep
+data/reports/html/*.html
+data/reports/markdown/*.md
+!data/reports/html/.gitkeep
+!data/reports/markdown/.gitkeep
 
-# Host monitoring output
-Host/output/*.json
-Host/output/temp/
-!Host/output/.gitkeep
-
-# Host2 (Go agent) build output
+# Go agent build output
 # NOTE: build.sh produces host-agent-{linux,macos,windows.exe}. The previous
 # patterns said "host2-agent-*" and therefore never matched anything, which is
 # how 24 MB of binaries reached the history. Binaries ship as GitHub Release
 # assets instead - see adr/0007-binaries-via-releases.md
-Host2/bin/host-agent-*
-Host2/bin/go_latest.json
+agent/bin/host-agent-*
+agent/bin/go_latest.json
 # `go build ./...` drops the binary in the package directory, not bin/
-Host2/system-monitor-agent
-Host2/system-monitor-agent.exe
-Host2/*.test
-Host2/*.bin
-!Host2/bin/.gitkeep
+agent/system-monitor-agent
+agent/system-monitor-agent.exe
+agent/*.test
+agent/*.bin
+!agent/bin/.gitkeep
 
 # Data files (generated at runtime)
 # NOTE: patterns containing a slash are anchored to this file's directory, so
@@ -115,7 +110,7 @@ ENV/
 # ============================================
 # Go
 # ============================================
-# Compiled binaries are already excluded above in Host2/bin/
+# Compiled binaries are already excluded above in agent/bin/
 
 # ============================================
 # Docker
@@ -166,13 +161,11 @@ memory/
 # ============================================
 # Keep Important Files
 # ============================================
-!libs/README.md
 !docs/README.md
 !data/logs/.gitkeep
 !data/metrics/.gitkeep
 !data/alerts/.gitkeep
-!json/.gitkeep
-!reports/html/.gitkeep
-!reports/markdown/.gitkeep
-!Host/output/.gitkeep
-!Host2/bin/.gitkeep
+!data/history/.gitkeep
+!data/reports/html/.gitkeep
+!data/reports/markdown/.gitkeep
+!agent/bin/.gitkeep

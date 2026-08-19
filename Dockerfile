@@ -1,4 +1,4 @@
-# System Monitor - Dashboard Container
+# SysPlex - Dashboard Container
 # Two-Tier Architecture: This runs the dashboard only
 # Host API must run natively on your machine for real hardware access
 
@@ -53,17 +53,14 @@ RUN echo "━━━━━━━━━━━━━━━━━━━━━━━�
     echo "✓ Python packages installed"
 
 # Copy application files
-COPY web/ ./web/
-COPY static/ ./static/
-COPY templates/ ./templates/
-COPY core/ ./core/
+COPY server/ ./server/
 
 # Create data directories
 RUN mkdir -p \
     /app/data/metrics \
     /app/data/logs \
     /app/data/alerts \
-    /app/reports
+    /app/data/reports
 
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \

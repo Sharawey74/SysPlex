@@ -1,4 +1,4 @@
-module system-monitor-agent
+module github.com/Sharawey74/SysPlex/agent
 
 go 1.21
 

@@ -1,10 +1,10 @@
-"""Unit tests for core.alert_manager module."""
+"""Unit tests for server.alerts module."""
 
 import json
 import pytest
 from pathlib import Path
 from datetime import datetime
-from core.alert_manager import (
+from server.alerts import (
     load_alerts,
     create_empty_alerts_file,
     add_alert,

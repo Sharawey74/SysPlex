@@ -16,7 +16,7 @@ import requests
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-JSON_DIR = project_root / 'json'
+HISTORY_DIR = project_root / 'data' / 'history'
 INTERVAL = 60  # seconds
 MAX_FILES = 10  # Keep only last 10 files
 HOST_API_URL = "http://host.docker.internal:8888/metrics"
@@ -50,7 +50,7 @@ def save_metrics_json():
         
         # Filename format: YYYYMMDD_HHMMSS.json (local time)
         filename = now_local.strftime('%Y%m%d_%H%M%S') + '.json'
-        filepath = JSON_DIR / filename
+        filepath = HISTORY_DIR / filename
         
         # Add timestamps to metrics (local time format: dd/mm/year HH:MM:SS)
         metrics['saved_at'] = now_utc.isoformat() + 'Z'
@@ -77,7 +77,7 @@ def save_metrics_json():
 def cleanup_old_files():
     """Keep only the last MAX_FILES JSON files"""
     try:
-        files = sorted(JSON_DIR.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
+        files = sorted(HISTORY_DIR.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
         
         if len(files) > MAX_FILES:
             deleted_count = 0
@@ -102,7 +102,7 @@ def main():
     print("JSON Logging Service - Fetching from Host API")
     print("=" * 60)
     print(f"Host API:      {HOST_API_URL}")
-    print(f"Log Directory: {JSON_DIR}")
+    print(f"Log Directory: {HISTORY_DIR}")
     print(f"Save Interval: {INTERVAL} seconds")
     print(f"Max Files:     {MAX_FILES} (auto-cleanup)")
     print(f"Timestamp:     Local time (dd/mm/yyyy HH:MM:SS)")
@@ -110,7 +110,7 @@ def main():
     print("\nPress Ctrl+C to stop\n")
     
     # Create JSON directory
-    JSON_DIR.mkdir(parents=True, exist_ok=True)
+    HISTORY_DIR.mkdir(parents=True, exist_ok=True)
     
     # Register signal handler
     signal.signal(signal.SIGINT, signal_handler)

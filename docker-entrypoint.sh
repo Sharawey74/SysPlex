@@ -3,7 +3,7 @@ set -e
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-echo "🚀 System Monitor Dashboard - Starting Up"
+echo "🚀 SysPlex Dashboard - Starting Up"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 echo "📊 Configuration:"
@@ -54,7 +54,7 @@ echo ""
 
 # If command is provided, execute it; otherwise start Flask
 if [ $# -eq 0 ]; then
-    exec python3 -m flask --app web.app run --host 0.0.0.0 --port 5000
+    exec python3 -m flask --app server.app run --host 0.0.0.0 --port 5000
 else
     exec "$@"
 fi

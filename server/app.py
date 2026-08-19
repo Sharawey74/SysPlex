@@ -20,19 +20,17 @@ if str(current_dir) not in sys.path:
     sys.path.append(str(current_dir))
 
 try:
-    from report_generator import ReportGenerator
+    from reports import ReportGenerator
 except ImportError:
-    from web.report_generator import ReportGenerator
+    from server.reports import ReportGenerator
 
 # Configuration
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / 'data'
-JSON_DIR = PROJECT_ROOT / 'json'
-HOST_OUTPUT_DIR = PROJECT_ROOT / 'Host' / 'output'
-HOST_LATEST_JSON = HOST_OUTPUT_DIR / 'latest.json'
-HOST2_OUTPUT_DIR = PROJECT_ROOT / 'Host2'
-GO_LATEST_JSON = HOST2_OUTPUT_DIR / 'bin' / 'go_latest.json'
-REPORTS_DIR = PROJECT_ROOT / 'reports'
+HISTORY_DIR = DATA_DIR / 'history'
+HOST_LATEST_JSON = DATA_DIR / 'metrics' / 'latest.json'
+GO_LATEST_JSON = PROJECT_ROOT / 'agent' / 'bin' / 'go_latest.json'
+REPORTS_DIR = DATA_DIR / 'reports'
 ALERTS_FILE = DATA_DIR / 'alerts' / 'alerts.json'
 
 # Native Agent Configuration
@@ -50,8 +48,8 @@ logging.basicConfig(
 logger = logging.getLogger('dashboard-v5')
 
 app = Flask(__name__,
-            template_folder=str(PROJECT_ROOT / 'templates'),
-            static_folder=str(PROJECT_ROOT / 'static'))
+            template_folder=str(Path(__file__).parent / 'templates'),
+            static_folder=str(Path(__file__).parent / 'static'))
 
 @app.route('/')
 def index():
@@ -83,8 +81,8 @@ def get_metrics():
 
     # 2. Try Latest Log in json/ directory
     try:
-        if JSON_DIR.exists():
-            json_files = sorted(JSON_DIR.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
+        if HISTORY_DIR.exists():
+            json_files = sorted(HISTORY_DIR.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
             if json_files:
                 latest_log = json_files[0]
                 with open(latest_log, 'r', encoding='utf-8') as f:
@@ -111,7 +109,7 @@ def get_native_metrics():
     Proxy endpoint for Native Go Agent metrics.
     Strategy:
     1. Try live API (http://localhost:8889)
-    2. Fallback to reading 'Host2/go_latest.json' (if agent is writing files but API unreachable)
+    2. Fallback to reading 'agent/bin/go_latest.json' (if agent is writing files but API unreachable)
     """
     # 1. Try Live API
     try:
@@ -208,9 +206,9 @@ def generate_report():
             except: pass
         
         # Fallback for Legacy if missing
-        if not legacy_data and JSON_DIR.exists():
+        if not legacy_data and HISTORY_DIR.exists():
             try:
-                json_files = sorted(JSON_DIR.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
+                json_files = sorted(HISTORY_DIR.glob('*.json'), key=lambda p: p.stat().st_mtime, reverse=True)
                 if json_files:
                     with open(json_files[0], 'r', encoding='utf-8') as f:
                         legacy_data = json.load(f)

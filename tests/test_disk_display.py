@@ -8,7 +8,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from core.metrics_collector import load_current_metrics
+from server.metrics import load_current_metrics
 
 metrics = load_current_metrics()
 disks = metrics.get('disk', [])

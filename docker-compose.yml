@@ -2,15 +2,13 @@
 # Run with: docker-compose up --build -d
 # Prerequisites: Host API must be running natively (bash start-host-api.sh)
 
-version: '3.8'
-
 services:
   dashboard:
     build:
       context: .
       dockerfile: Dockerfile
-    image: system-monitor:latest
-    container_name: system-monitor-dashboard
+    image: sysplex:latest
+    container_name: sysplex-dashboard
 
     # Method 1: Privileged mode for maximum hardware visibility
     # Note: Dashboard still can't access real GPU/sensors
@@ -22,10 +20,7 @@ services:
     volumes:
       # Application data
       - ./data:/app/data
-      - ./reports:/app/reports
-      - ./json:/app/json
-      - ./Host/output:/app/Host/output:ro
-      - ./Host2:/app/Host2:ro
+      - ./agent/bin:/app/agent/bin:ro
 
       # Optional: Host system paths (for container metrics only)
       - /proc:/host/proc:ro
@@ -73,7 +68,7 @@ services:
 
     # Post-startup messages
     labels:
-      - "com.system-monitor.description=Two-Tier Architecture Dashboard"
+      - "org.opencontainers.image.title=SysPlex dashboard"
 
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:5000/api/health" ]
@@ -83,17 +78,16 @@ services:
       start_period: 40s
 
   # JSON Logger Service - Background metrics logging
-  json-logger:
+  collector:
     build:
       context: .
       dockerfile: Dockerfile
-    image: system-monitor:latest
-    container_name: system-monitor-json-logger
-    command: python3 web/json_logger.py
+    image: sysplex:latest
+    container_name: sysplex-collector
+    command: python3 -m server.collector
 
     # Mount json directory for logging
     volumes:
-      - ./json:/app/json
       - ./data:/app/data
 
     # Enable connection to Host API
@@ -123,4 +117,4 @@ services:
 
 networks:
   default:
-    name: system-monitor-network
+    name: sysplex-network

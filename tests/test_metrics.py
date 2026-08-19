@@ -1,10 +1,10 @@
-"""Unit tests for core.metrics_collector module."""
+"""Unit tests for server.metrics module."""
 
 import json
 import pytest
 from pathlib import Path
 from unittest.mock import patch, mock_open
-from core.metrics_collector import (
+from server.metrics import (
     load_current_metrics,
     get_metric_value,
     _parse_metrics,
