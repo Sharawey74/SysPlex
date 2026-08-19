@@ -10,22 +10,17 @@ services:
     image: sysplex:latest
     container_name: sysplex-dashboard
 
-    # Method 1: Privileged mode for maximum hardware visibility
-    # Note: Dashboard still can't access real GPU/sensors
-    # This mode is for compatibility and seeing host processes
-    pid: host
-    privileged: true
+    # No privileges: the dashboard renders, agents measure. Hardware access
+    # lives on the host by design, so the container needs none of it.
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
 
-    # Mount host paths (optional for container-based metrics)
+    # Volumes
     volumes:
       # Application data
       - ./data:/app/data
       - ./agents/go/bin:/app/agents/go/bin:ro
-
-      # Optional: Host system paths (for container metrics only)
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /dev:/host/dev:ro
 
     # Network configuration
     ports:

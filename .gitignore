@@ -153,10 +153,11 @@ dist/
 # ============================================
 # Personal working files (not project documentation)
 # ============================================
-# plans/ and adr/ ARE tracked - they are the record of why this system looks
-# the way it does. Only these two are personal.
+# docs/ is untracked in full, including docs/adr and docs/plans. They are
+# working notes, not part of the shipped project; the README is the documentation.
 TASKS.md
 memory/
+docs/
 
 # ============================================
 # Keep Important Files
