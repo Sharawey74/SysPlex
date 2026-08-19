@@ -1,7 +1,0 @@
-{
-  "cpu_celsius": 0,
-  "cpu_vendor": "Intel",
-  "gpu_celsius": 58,
-  "gpu_vendor": "NVIDIA",
-  "status": "ok"
-}
