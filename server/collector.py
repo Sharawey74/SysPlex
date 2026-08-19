@@ -12,11 +12,17 @@ from datetime import datetime
 import signal
 import requests
 
+try:
+    from thresholds import evaluate_and_record
+except ImportError:  # pragma: no cover
+    from server.thresholds import evaluate_and_record
+
 # Add project root to path (web/ is one level down from project root)
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 HISTORY_DIR = project_root / 'data' / 'history'
+ALERTS_PATH = project_root / 'data' / 'alerts' / 'alerts.json'
 INTERVAL = 60  # seconds
 MAX_FILES = 10  # Keep only last 10 files
 HOST_API_URL = "http://host.docker.internal:8888/metrics"
@@ -59,8 +65,13 @@ def save_metrics_json():
         
         with open(filepath, 'w') as f:
             json.dump(metrics, f, indent=2)
+
+        # Evaluate thresholds on every sample. Alerts are raised here rather
+        # than in the request path so they fire whether or not anyone has the
+        # dashboard open.
+        raised = evaluate_and_record(metrics, path=str(ALERTS_PATH))
         
-        print(f"[{now_local.strftime('%H:%M:%S')}] ✓ Saved: {filename} | Host: {metrics.get('system', {}).get('hostname', 'unknown')} | CPU: {metrics.get('cpu', {}).get('usage_percent', 0)}%")
+        print(f"[{now_local.strftime('%H:%M:%S')}] ✓ Saved: {filename} | Host: {metrics.get('system', {}).get('hostname', 'unknown')} | CPU: {metrics.get('cpu', {}).get('usage_percent', 0)}%" + (f" | ALERTS: {len(raised)}" if raised else ""))
         
         # Cleanup old files (keep only last 10)
         cleanup_old_files()

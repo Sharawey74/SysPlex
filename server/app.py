@@ -21,8 +21,12 @@ if str(current_dir) not in sys.path:
 
 try:
     from reports import ReportGenerator
+    from alerts import load_alerts, get_alert_counts
+    from thresholds import evaluate, load_thresholds, evaluate_and_record
 except ImportError:
     from server.reports import ReportGenerator
+    from server.alerts import load_alerts, get_alert_counts
+    from server.thresholds import evaluate, load_thresholds, evaluate_and_record
 
 # Configuration
 PROJECT_ROOT = Path(__file__).parent.parent
@@ -284,6 +288,45 @@ def trigger_refresh():
         'success': True,
         'results': results
     })
+
+
+@app.route('/api/alerts')
+def get_alerts():
+    """Current alerts, newest first, with counts by level."""
+    level = request.args.get('level')
+    alerts = load_alerts(str(ALERTS_FILE), level_filter=level)
+    return jsonify({
+        'success': True,
+        'counts': get_alert_counts(alerts),
+        'thresholds': load_thresholds(),
+        'alerts': alerts,
+    })
+
+
+@app.route('/api/alerts/evaluate', methods=['POST'])
+def evaluate_alerts():
+    """
+    Re-evaluate thresholds against the latest metrics and persist any breaches.
+
+    The collector does this on every sample; this endpoint exists so the
+    dashboard's refresh button reflects threshold state immediately rather than
+    waiting for the next collection cycle.
+    """
+    data = None
+    for source in (HOST_LATEST_JSON, GO_LATEST_JSON):
+        if source.exists():
+            try:
+                with open(source, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                break
+            except (OSError, json.JSONDecodeError) as e:
+                logger.warning("Could not read %s for evaluation: %s", source, e)
+
+    if data is None:
+        return jsonify({'success': False, 'error': 'No metrics available to evaluate'}), 503
+
+    raised = evaluate_and_record(data, path=str(ALERTS_FILE))
+    return jsonify({'success': True, 'raised': len(raised), 'alerts': raised})
 
 
 @app.route('/api/health')

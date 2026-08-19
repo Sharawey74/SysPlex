@@ -95,7 +95,7 @@ Two tiers, split along the line where hardware access ends.
 ║   │  ──────────────────────────────────────────────────────────────────  │  ║
 ║   │   app.py        REST API + dashboard routes         (Flask)          │  ║
 ║   │   metrics.py    envelope parsing and normalization                   │  ║
-║   │   alerts.py     threshold evaluation                                 │  ║
+║   │   alerts.py     alert store          thresholds.py  evaluation      │  ║
 ║   │   reports.py    HTML + Markdown report generation                    │  ║
 ║   │   collector.py  background sampling → data/history/                  │  ║
 ║   └──────────────────────────────────────────────────────────────────────┘  ║
@@ -234,6 +234,8 @@ Every collector emits the same envelope regardless of implementation language, s
 | `GET` | `/api/metrics/dual` | Both agents, side by side |
 | `GET` | `/api/metrics/native` | Go agent only |
 | `GET` | `/api/metrics/source` | Which sources are currently reachable |
+| `GET` | `/api/alerts` | Active alerts with counts by level and current thresholds |
+| `POST` | `/api/alerts/evaluate` | Re-evaluate thresholds against the latest metrics |
 | `POST` | `/api/refresh` | Trigger immediate collection on all agents |
 | `POST` | `/api/reports/generate` | Generate an HTML + Markdown system report |
 | `GET` | `/api/reports/download/html/<file>` | Download a generated report |
@@ -260,6 +262,31 @@ Every collector emits the same envelope regardless of implementation language, s
 | `JSON_LOG_INTERVAL` | `60` | Sampling interval, seconds |
 | `SYSPLEX_BASH_AGENT_HOST` | `127.0.0.1` | Bind address for the Bash agent API |
 
+### Alert thresholds
+
+Every bound is overridable as `SYSPLEX_THRESHOLD_<METRIC>_<LEVEL>`, so a fanless mini PC
+and a workstation need not agree on what a hot CPU is. A malformed value is logged and
+ignored rather than stopping collection.
+
+| Metric | Warning | Critical | Evaluated |
+|:--|:--:|:--:|:--|
+| `CPU` | 80% | 90% | usage percent |
+| `MEMORY` | 85% | 95% | usage percent |
+| `DISK` | 85% | 95% | per mount |
+| `TEMPERATURE` | 75 °C | 90 °C | CPU package |
+| `GPU` | 85% | 95% | per device, utilization |
+| `GPU_TEMP` | 80 °C | 92 °C | per device |
+
+```bash
+SYSPLEX_THRESHOLD_CPU_CRITICAL=95 SYSPLEX_THRESHOLD_TEMPERATURE_WARNING=70 docker compose up -d
+```
+
+Thresholds are evaluated on **every collection cycle**, so alerts fire whether or not the
+dashboard is open. Only the highest breached level is raised per metric — a CPU at 96%
+produces one `critical`, not a `critical` and a `warning`. Sensors reporting
+`status: "unavailable"` are skipped entirely: a placeholder zero is not a measurement, and
+treating it as one would mean a failing sensor looks healthy.
+
 ---
 
 ## Project structure
@@ -274,7 +301,8 @@ agents/
 server/
   app.py            REST API and dashboard routes
   metrics.py        envelope parsing and normalization
-  alerts.py         threshold evaluation
+  alerts.py         alert store and queries
+  thresholds.py     threshold evaluation
   reports.py        HTML and Markdown report generation
   collector.py      background sampling into data/history/
   static/           dashboard assets — Chart.js, CSS
