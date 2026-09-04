@@ -3,8 +3,8 @@
 import sys
 from pathlib import Path
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent.parent
+# Add the repository root to sys.path (tests/ is one level down)
+project_root = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(project_root))
 
 import json
@@ -12,11 +12,13 @@ import pytest
 
 def test_gpu_data_reading():
     """Test that GPU data can be read from current.json"""
-    metrics_file = project_root / 'data' / 'metrics' / 'current.json'
-    
-    # Skip if metrics file doesn't exist
+    # Read the committed fixture rather than data/metrics/current.json, which is
+    # gitignored runtime state and therefore absent on a fresh clone and in CI.
+    # Pointing at it meant these assertions never actually ran.
+    metrics_file = project_root / 'fixtures' / 'demo' / 'linux-wsl.json'
+
     if not metrics_file.exists():
-        pytest.skip("Metrics file not found")
+        pytest.skip("Demo fixture missing")
     
     try:
         with open(metrics_file, 'r', encoding='utf-8-sig') as f:
